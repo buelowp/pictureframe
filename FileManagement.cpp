@@ -23,7 +23,7 @@ FileManagement::~FileManagement()
 
 bool FileManagement::init()
 {
-	QSettings settings("Home", "PictureViewer");
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
 	bIsRandom = settings.value("Random").toBool();
 	strOrderBy = settings.value("OrderBy").toString();
 	QString path = settings.value("ImagePath").toString();

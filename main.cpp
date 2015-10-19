@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 	QApplication app(argc, argv);
 	ImageProcessing display;
 
-	QSettings settings("Home", "PictureViewer");
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
 	settings.setValue("Random", true);
 	settings.setValue("OrderBy", "time");
 	settings.setValue("ImagePath", "/Users/pete/Desktop/pictureframe/");

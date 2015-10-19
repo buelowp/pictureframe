@@ -22,10 +22,8 @@ ImageProcessing::~ImageProcessing() {
 
 bool ImageProcessing::init()
 {
-	QSettings settings("Home", "PictureViewer");
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
 	int iTimeout = settings.value("Timeout", 5000).toInt();
-
-	qDebug() << iTimeout;
 
 	pNextImage->setInterval(iTimeout);
 	pNextImage->start();
