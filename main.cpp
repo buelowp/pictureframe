@@ -14,14 +14,13 @@ int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
 	ImageProcessing display;
+	int width, height;
 
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
-	settings.setValue("Random", true);
-	settings.setValue("OrderBy", "time");
-	settings.setValue("ImagePath", "/Users/pete/Desktop/pictureframe/");
-	settings.setValue("Timeout", 5000);
+	width = settings.value("Width", 100).toInt();
+	height = settings.value("Height", 100).toInt();
 
-	display.setMinimumSize(1024, 768);
+	display.setMinimumSize(width, height);
 	display.setStyleSheet("QMainWindow {background: 'black';}");
 	if (display.init())
 		display.show();

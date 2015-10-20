@@ -13,7 +13,8 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
 	pNextImage = new QTimer(this);
 	connect(pNextImage, SIGNAL(timeout()), this, SLOT(timeout()));
 	lbImage = new QLabel(this);
-	lbImage->setGeometry(0, 0, 1024, 768);
+	lbImage->setGeometry(0, 0, 1024, 600);
+	lbImage->setAlignment(Qt::AlignCenter);
 }
 
 ImageProcessing::~ImageProcessing() {
@@ -38,12 +39,19 @@ void ImageProcessing::timeout()
 {
 	QString nextImage = fm.next();
 	QPixmap image(nextImage);
-	lbImage->setPixmap(image.scaledToWidth(1024));
+
+	if (image.width() > image.height())
+		lbImage->setPixmap(image.scaledToWidth(1024));
+	else
+		lbImage->setPixmap(image.scaledToHeight(768));
 }
 
 void ImageProcessing::showEvent(QShowEvent*)
 {
 	QString nextImage = fm.next();
 	QPixmap image(nextImage);
-	lbImage->setPixmap(image.scaledToWidth(1024));
+	if (image.width() > image.height())
+		lbImage->setPixmap(image.scaledToWidth(1024));
+	else
+		lbImage->setPixmap(image.scaledToHeight(768));
 }
