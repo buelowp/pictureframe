@@ -13,8 +13,6 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
 	pNextImage = new QTimer(this);
 	connect(pNextImage, SIGNAL(timeout()), this, SLOT(timeout()));
 	lbImage = new QLabel(this);
-	lbImage->setGeometry(0, 0, 1024, 600);
-	lbImage->setAlignment(Qt::AlignCenter);
 }
 
 ImageProcessing::~ImageProcessing() {
@@ -29,6 +27,9 @@ bool ImageProcessing::init()
 	pNextImage->setInterval(iTimeout);
 	pNextImage->start();
 
+	lbImage->setGeometry(0, 0, width(), height());
+	lbImage->setAlignment(Qt::AlignCenter);
+
 	if (!fm.init())
 		return false;
 
@@ -41,9 +42,9 @@ void ImageProcessing::timeout()
 	QPixmap image(nextImage);
 
 	if (image.width() > image.height())
-		lbImage->setPixmap(image.scaledToWidth(1024));
+		lbImage->setPixmap(image.scaledToWidth(width()));
 	else
-		lbImage->setPixmap(image.scaledToHeight(768));
+		lbImage->setPixmap(image.scaledToHeight(height()));
 }
 
 void ImageProcessing::showEvent(QShowEvent*)
@@ -51,7 +52,7 @@ void ImageProcessing::showEvent(QShowEvent*)
 	QString nextImage = fm.next();
 	QPixmap image(nextImage);
 	if (image.width() > image.height())
-		lbImage->setPixmap(image.scaledToWidth(1024));
+		lbImage->setPixmap(image.scaledToWidth(width()));
 	else
-		lbImage->setPixmap(image.scaledToHeight(768));
+		lbImage->setPixmap(image.scaledToHeight(height()));
 }
