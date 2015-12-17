@@ -25,7 +25,7 @@ public:
 private:
 	QString nextRandom();
 	QString nextByDate();
-	int randInt(int low, int high)
+	int randInt(int low, int high);
 
 	QString parentPath;
 	QDir *pImagePath;
