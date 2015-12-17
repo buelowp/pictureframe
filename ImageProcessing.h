@@ -10,7 +10,6 @@
 
 #include <QMainWindow>
 #include <QtGui>
-#include <QtWidgets>
 #include <QDebug>
 
 #include "FileManagement.h"

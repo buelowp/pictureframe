@@ -66,24 +66,16 @@ bool FileManagement::init()
 	return true;
 }
 
-QString FileManagement::next()
+QString FileManagement::nextByDate()
 {
 	if (iIndex < pFileList.size())
 		return pImagePath->filePath(pFileList[iIndex++]);
 	else {
 		iIndex = 0;
-		std::random_shuffle(pFileList.begin(), pFileList.end());
+		if (bIsRandom)
+			std::random_shuffle(pFileList.begin(), pFileList.end());
 	}
 
-	return pImagePath->filePath(pFileList[iIndex++]);
-}
-
-QString FileManagement::nextByDate()
-{
-	if (iIndex < pFileList.size())
-		return pImagePath->filePath(pFileList[iIndex++]);
-
-	iIndex = 0;
 	return pImagePath->filePath(pFileList[iIndex++]);
 }
 
