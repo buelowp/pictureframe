@@ -11,6 +11,7 @@
 #include <QtCore>
 #include <QDebug>
 #include <cstdlib>
+#include <algorithm>
 
 class FileManagement {
 public:
@@ -24,6 +25,7 @@ public:
 private:
 	QString nextRandom();
 	QString nextByDate();
+	int randInt(int low, int high)
 
 	QString parentPath;
 	QDir *pImagePath;
@@ -33,6 +35,7 @@ private:
 	int iIndex;
 	int iLastRandIndex;
 	QString strOrderBy;
+	QVector<int> randomOrder;
 };
 
 #endif /* FILEMANAGEMENT_H_ */

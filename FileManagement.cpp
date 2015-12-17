@@ -15,10 +15,20 @@ FileManagement::FileManagement()
 	pImagePath = NULL;
 
 	srand (time(NULL));
+	// Create seed for the random
+	// That is needed only once on application startup
+	QTime time = QTime::currentTime();
+	qsrand((uint)time.msec());
 }
 
 FileManagement::~FileManagement()
 {
+}
+
+int FileManagement::randInt(int low, int high)
+{
+	// Random number between low and high
+	return qrand() % ((high + 1) - low) + low;
 }
 
 bool FileManagement::init()
@@ -44,11 +54,28 @@ bool FileManagement::init()
 	else
 		pFileList = pImagePath->entryList(QDir::Files, QDir::Time|QDir::Reversed);
 
+
+	if (bIsRandom) {
+		std::random_shuffle(pFileList.begin(), pFileList.end());
+	}
+
 	if (pFileList.size() == 0)
 		return false;
 
 	bValid = true;
 	return true;
+}
+
+QString FileManagement::next()
+{
+	if (iIndex < pFileList.size())
+		return pImagePath->filePath(pFileList[iIndex++]);
+	else {
+		iIndex = 0;
+		std::random_shuffle(pFileList.begin(), pFileList.end());
+	}
+
+	return pImagePath->filePath(pFileList[iIndex++]);
 }
 
 QString FileManagement::nextByDate()
@@ -74,8 +101,9 @@ QString FileManagement::nextRandom()
 
 QString FileManagement::next()
 {
-	if (bIsRandom)
-		return nextRandom();
+	if (bIsRandom) {
+		return next();
+	}
 
 	return nextByDate();
 }

@@ -13,6 +13,7 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
 	pNextImage = new QTimer(this);
 	connect(pNextImage, SIGNAL(timeout()), this, SLOT(timeout()));
 	lbImage = new QLabel(this);
+    bTurnOff = false;
 }
 
 ImageProcessing::~ImageProcessing() {
@@ -23,6 +24,12 @@ bool ImageProcessing::init()
 {
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
 	int iTimeout = settings.value("Timeout", 5000).toInt();
+    bTurnOff = settings.value("TurnOff", false).toBool();
+    
+    if (bTurnOff) {
+        offTime = settings.value("OffTime", "17:00").toString();
+        onTime = settings.value("OnTime", "7:00").toString();
+    }
 
 	pNextImage->setInterval(iTimeout);
 	pNextImage->start();

@@ -22,6 +22,7 @@ int main(int argc, char *argv[])
 
 	display.setMinimumSize(width, height);
 	display.setStyleSheet("QMainWindow {background: 'black';}");
+	app.setOverrideCursor(QCursor(Qt::BlankCursor));
 	if (display.init())
 		display.show();
 	else

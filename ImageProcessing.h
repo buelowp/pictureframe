@@ -36,8 +36,10 @@ private:
 	FileManagement fm;
 	int iImageIndex;
 	QString path;
-
+    bool bTurnOff;
 	QLabel *lbImage;
+    QString offTime;
+    QString onTime;
 };
 
 #endif /* IMAGEPROCESSING_H_ */
