@@ -75,9 +75,7 @@ QString FileManagement::nextByDate()
 		return pImagePath->filePath(pFileList[iIndex++]);
 	else {
 		iIndex = 0;
-		if (bIsRandom) {
-			init();
-		}
+		init();
 	}
 
 	return pImagePath->filePath(pFileList[iIndex++]);
