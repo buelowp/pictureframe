@@ -1,13 +1,15 @@
-QT       += core gui
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+CONFIG += qt debug
+QT += core gui widgets
+QT += multimedia multimediawidgets
 
 TARGET = pictureframe
 TEMPLATE = app
 
 SOURCES += main.cpp\
         ImageProcessing.cpp \
-        FileManagement.cpp
+        FileManagement.cpp \
+        VideoWidget.cpp
 
 HEADERS  += ImageProcessing.h \
-			FileManagement.h
+	FileManagement.h \
+	VideoWidget.h

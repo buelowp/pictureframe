@@ -37,6 +37,7 @@ bool FileManagement::init()
 	bIsRandom = settings.value("Random").toBool();
 	strOrderBy = settings.value("OrderBy").toString();
 	QString path = settings.value("ImagePath").toString();
+	qWarning() << "Set image path to be" << path;
 
 	if (!pImagePath) {
 		pImagePath = new QDir(path);

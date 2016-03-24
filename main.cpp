@@ -20,13 +20,18 @@ int main(int argc, char *argv[])
 	width = settings.value("Width", 100).toInt();
 	height = settings.value("Height", 100).toInt();
 
-	display.setMinimumSize(width, height);
+	qWarning() << "width:" << width << ", height:" << height;
+
+//	display.setMinimumSize(width, height);
 	display.setStyleSheet("QMainWindow {background: 'black';}");
 	app.setOverrideCursor(QCursor(Qt::BlankCursor));
-	if (display.init())
+//    display.showMaximized();
+	display.setFixedSize(QSize(width, height));
+
+    if (display.init())
 		display.show();
 	else
-		qDebug() << "display init failed";
+		qWarning() << "display init failed";
 
 	return app.exec();
 }
