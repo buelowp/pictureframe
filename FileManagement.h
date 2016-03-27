@@ -26,9 +26,9 @@ private:
 	QString nextRandom();
 	QString nextByDate();
 	int randInt(int low, int high);
+	bool getFiles();
 
 	QString parentPath;
-	QDir *pImagePath;
 	QStringList pFileList;
 	bool bValid;
 	bool bIsRandom;
@@ -36,6 +36,7 @@ private:
 	int iLastRandIndex;
 	QString strOrderBy;
 	QVector<int> randomOrder;
+	int fileGetterIndex;
 };
 
 #endif /* FILEMANAGEMENT_H_ */
