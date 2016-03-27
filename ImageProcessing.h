@@ -16,9 +16,9 @@
 #include <QtWidgets/QWidget>
 #include <QtMultimedia/QMediaPlayer>
 #include <QtMultimedia/QMediaPlaylist>
+#include <QtMultimediaWidgets/QVideoWidget>
 
 #include "FileManagement.h"
-#include "VideoWidget.h"
 
 class ImageProcessing : public QMainWindow {
 	Q_OBJECT
@@ -55,7 +55,7 @@ private:
 
     QMediaPlayer *player;
     QMediaPlaylist *playlist;
-    VideoWidget *videoWidget;
+    QVideoWidget *videoWidget;
 };
 
 #endif /* IMAGEPROCESSING_H_ */

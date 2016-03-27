@@ -24,7 +24,7 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
     connect(player, SIGNAL(metaDataChanged()), this, SLOT(metaDataChanged()));
     connect(player, SIGNAL(error(QMediaPlayer::Error)), this, SLOT(displayErrorMessage()));
 
-    videoWidget = new VideoWidget(this);
+    videoWidget = new QVideoWidget(this);
     player->setVideoOutput(videoWidget);
     videoWidget->hide();
     qWarning() << "finished constructor";
