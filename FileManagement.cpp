@@ -14,11 +14,9 @@ FileManagement::FileManagement()
 	iLastRandIndex = 0;
 	fileGetterIndex = 1;
 
-	srand (time(NULL));
 	// Create seed for the random
 	// That is needed only once on application startup
-	QTime time = QTime::currentTime();
-	qsrand((uint)time.msec());
+	qsrand((uint)QTime::currentTime().msec());
 }
 
 FileManagement::~FileManagement()
