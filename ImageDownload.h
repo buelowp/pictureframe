@@ -21,6 +21,7 @@ public:
 	void getNewImages();
 	void doXMLDownload(const QUrl &);
 	void doImageDownload(const QUrl &);
+	int getImages(const QUrl);
 
 public slots:
     void downloadFinished(QNetworkReply *reply);
@@ -35,6 +36,7 @@ private:
     QNetworkAccessManager manager;
     QList<QNetworkReply *> currentDownloads;
     QStringList imageFiles;
+    QByteArray m_Download;
 };
 
 #endif /* IMAGEDOWNLOAD_H_ */

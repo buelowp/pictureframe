@@ -6,8 +6,9 @@
  */
 
 
-#include <QApplication>
-#include <QDebug>
+#include <QtWidgets/QApplication>
+#include <QtCore/QDebug>
+#include <QtNetwork/QtNetwork>
 #include "ImageProcessing.h"
 
 int main(int argc, char *argv[])
@@ -30,8 +31,10 @@ int main(int argc, char *argv[])
 
     if (display.init())
 		display.show();
-	else
+	else {
 		qWarning() << "display init failed";
+		exit(-1);
+	}
 
 	return app.exec();
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Images>
+  <Image>
+    <Name>testimage.jpg</Name>
+    <Url>https://testlocation/testimage.jpg</Url>
+  </Image>
+  <Image>
+    <Name>testimage2.jpg</Name>
+    <Url>https://testlocation/testimage2.jpg</Url>
+  </Image>
+  <Image>
+    <Name>testimage3.jpg</Name>
+    <Url>https://testlocation/testimage3.jpg</Url>
+  </Image>
+</Images>

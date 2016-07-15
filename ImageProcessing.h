@@ -17,8 +17,10 @@
 #include <QtMultimedia/QMediaPlayer>
 #include <QtMultimedia/QMediaPlaylist>
 #include <QtMultimediaWidgets/QVideoWidget>
+#include <QtXml/QtXml>
 
 #include "FileManagement.h"
+#include "FileDownload.h"
 
 class ImageProcessing : public QMainWindow {
 	Q_OBJECT
@@ -29,6 +31,9 @@ public:
 	bool init();
 	void menu();
 	bool validateOptions();
+	void getNewContent();
+	void getContentList();
+	void checkFileExistsAndDownload(QString, QString);
 
 public slots:
 	void timeout();
@@ -38,9 +43,20 @@ public slots:
 	void durationChanged(qint64);
 	void positionChanged(qint64);
 	void metaDataChanged();
+	void networkTest();
+	void fileDownloadComplete();
+	void contentListDownloadComplete();
+	void fileDownloadError();
 
 protected:
 	void showEvent(QShowEvent*);
+
+private slots:
+	void downloadsFinished();
+
+signals:
+	void doneGettingFiles();
+	void doneGettingContentList();
 
 private:
 	QTimer *pNextImage;
@@ -52,10 +68,15 @@ private:
 	QLabel *lbImage;
     QString offTime;
     QString onTime;
+    QUrl picXML;
+    QMap<QString, QString> m_ImageList;
 
     QMediaPlayer *player;
     QMediaPlaylist *playlist;
     QVideoWidget *videoWidget;
+
+    FileDownload *m_contentList;
+    FileDownload *m_imageFile;
 };
 
 #endif /* IMAGEPROCESSING_H_ */
