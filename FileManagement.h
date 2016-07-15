@@ -20,23 +20,18 @@ public:
 
 	QString next();
 	bool init();
-	bool isValid() { return bValid; }
+	bool isValid();
 
 private:
-	QString nextRandom();
-	QString nextByDate();
-	int randInt(int low, int high);
 	bool getFiles();
 
 	QString parentPath;
-	QStringList pFileList;
-	bool bValid;
+	QStringList m_fileList;
 	bool bIsRandom;
-	int iIndex;
-	int iLastRandIndex;
+	int m_index;
 	QString strOrderBy;
 	QVector<int> randomOrder;
-	int fileGetterIndex;
+	int m_FilePathIndex;
 };
 
 #endif /* FILEMANAGEMENT_H_ */

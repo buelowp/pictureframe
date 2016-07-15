@@ -7,7 +7,9 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         ImageProcessing.cpp \
-        FileManagement.cpp 
+        FileManagement.cpp  \
+        FileDownload.cpp
 
 HEADERS  += ImageProcessing.h \
-	FileManagement.h 
+	FileManagement.h  \
+	FileDownload.h

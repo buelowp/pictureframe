@@ -9,10 +9,8 @@
 
 FileManagement::FileManagement()
 {
-	bValid = false;
-	iIndex = 0;
-	iLastRandIndex = 0;
-	fileGetterIndex = 1;
+	m_index = 0;
+	m_FilePathIndex = 1;
 
 	// Create seed for the random
 	// That is needed only once on application startup
@@ -23,16 +21,10 @@ FileManagement::~FileManagement()
 {
 }
 
-int FileManagement::randInt(int low, int high)
-{
-	// Random number between low and high
-	return qrand() % ((high + 1) - low) + low;
-}
-
 bool FileManagement::getFiles()
 {
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
-	QString fileSetting = QString("ImagePath%1").arg(fileGetterIndex);
+	QString fileSetting = QString("ImagePath%1").arg(m_FilePathIndex++);
 	QString path = settings.value(fileSetting).toString();
 	qWarning() << "fileSetting is" << fileSetting;
 	qWarning() << "Set image path to be" << path;
@@ -42,7 +34,6 @@ bool FileManagement::getFiles()
 	if (path.size() == 0)
 		return false;
 
-	fileGetterIndex++;
 	pImagePath = new QDir(path);
 
 	if (!pImagePath->exists()) {
@@ -61,8 +52,16 @@ bool FileManagement::getFiles()
 
 	for (int i = 0; i < currList.size(); i++) {
 		QString fn = currList.at(i);
-		pFileList.append(path + fn);
+		m_fileList.append(path + fn);
 	}
+	return true;
+}
+
+bool FileManagement::isValid()
+{
+	if (m_fileList.size() == 0)
+		return false;
+
 	return true;
 }
 
@@ -72,48 +71,29 @@ bool FileManagement::init()
 	bIsRandom = settings.value("Random").toBool();
 	strOrderBy = settings.value("OrderBy").toString();
 
+	m_FilePathIndex = 1;
+	m_fileList.clear();
 	while (getFiles())
 		;
 
-	if (pFileList.size() == 0)
+	if (m_fileList.size() == 0)
 		return false;
 
 	if (bIsRandom) {
 		qDebug() << "Shuffling";
-		std::random_shuffle(pFileList.begin(), pFileList.end());
+		std::random_shuffle(m_fileList.begin(), m_fileList.end());
 	}
 
-	bValid = true;
 	return true;
-}
-
-QString FileManagement::nextByDate()
-{
-	if (iIndex < pFileList.size())
-		return pFileList[iIndex++];
-	else {
-		iIndex = 0;
-		pFileList.clear();
-		fileGetterIndex = 1;
-		init();
-	}
-
-	return pFileList[iIndex++];
-}
-
-QString FileManagement::nextRandom()
-{
-	int index;
-
-	while ((index = rand() % pFileList.size()) == iLastRandIndex)
-		;
-
-	iLastRandIndex = index;
-
-	return pFileList[index];
 }
 
 QString FileManagement::next()
 {
-	return nextByDate();
+	if (m_index < m_fileList.size())
+		return m_fileList[m_index++];
+	else {
+		init();
+	}
+
+	return m_fileList[m_index++];
 }

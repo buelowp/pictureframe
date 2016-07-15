@@ -11,7 +11,7 @@
 #include <QtCore/QtCore>
 #include <QtNetwork/QtNetwork>
 
-class FileDownload {
+class FileDownload : public QObject {
 	Q_OBJECT
 public:
 	FileDownload(QObject *parent = 0);

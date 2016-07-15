@@ -51,13 +51,6 @@ public slots:
 protected:
 	void showEvent(QShowEvent*);
 
-private slots:
-	void downloadsFinished();
-
-signals:
-	void doneGettingFiles();
-	void doneGettingContentList();
-
 private:
 	QTimer *pNextImage;
 	FileManagement fm;
@@ -70,6 +63,8 @@ private:
     QString onTime;
     QUrl picXML;
     QMap<QString, QString> m_ImageList;
+    QMutex m_downloadInProgress;
+    QString m_fileInProgress;
 
     QMediaPlayer *player;
     QMediaPlaylist *playlist;

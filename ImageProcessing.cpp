@@ -84,12 +84,6 @@ bool ImageProcessing::init()
 	return true;
 }
 
-void ImageProcessing::getNewContent()
-{
-	FileDownload *imageList(picXML, this);
-
-}
-
 void ImageProcessing::getContentList()
 {
 	m_contentList->getFile(picXML);
@@ -97,9 +91,21 @@ void ImageProcessing::getContentList()
 
 void ImageProcessing::fileDownloadError()
 {
-	QTimer::singleShot(3600000, this, SLOT(networkTest()));
-	pNextImage->setInterval(iTimeout);
-	pNextImage->setSingleShot(true);
+	qDebug() << "Unable to download" << m_fileInProgress;
+	m_downloadInProgress.unlock();
+}
+
+void ImageProcessing::fileDownloadComplete()
+{
+	QFile f(m_fileInProgress);
+
+	if (f.open(QIODevice::WriteOnly)) {
+		QDataStream out(&f);
+		out << m_imageFile->downloadedData();
+	}
+	f.close();
+	m_fileInProgress.clear();
+	m_downloadInProgress.unlock();
 }
 
 void ImageProcessing::checkFileExistsAndDownload(QString name, QString url)
@@ -108,13 +114,16 @@ void ImageProcessing::checkFileExistsAndDownload(QString name, QString url)
 	QString path = settings.value("ImagePath1").toString();
 	QDir *pImagePath = new QDir(path);;
 
+	m_downloadInProgress.lock();
+
 	if (pImagePath->exists()) {
 		QStringList l = pImagePath->entryList();
-		if (l.contains(name)) {
-
+		if (!l.contains(name)) {
+			m_fileInProgress = name;
+			lbImage->setText(QString("Downloading %1").arg(url));
+			m_imageFile->getFile(url);
 		}
 	}
-
 }
 
 void ImageProcessing::contentListDownloadComplete()
@@ -122,7 +131,7 @@ void ImageProcessing::contentListDownloadComplete()
 	QXmlStreamReader doc(m_contentList->downloadedData());
 
 	if (doc.hasError()) {
-		emit fileDownloadError();
+		return;
 	}
 	else {
 	    if (doc.readNextStartElement()) {
@@ -162,6 +171,9 @@ void ImageProcessing::networkTest()
 			pNextImage->stop();
 			lbImage->setText("Getting more images");
 			getContentList();
+			QTimer::singleShot(3600000, this, SLOT(networkTest()));
+			fm.init();
+			timeout();
 		}
 	}
 }
