@@ -19,6 +19,7 @@ FileDownload::~FileDownload()
 
 void FileDownload::getFile(QUrl imageUrl)
 {
+	qWarning() << "FileDownload: Getting" << imageUrl;
 	QNetworkRequest request(imageUrl);
 	m_WebCtrl.get(request);
 }
@@ -26,11 +27,13 @@ void FileDownload::getFile(QUrl imageUrl)
 void FileDownload::fileDownloaded(QNetworkReply* pReply)
 {
 	if (pReply->error() == QNetworkReply::NoError) {
+		qWarning() << "Got a successful reply";
 		m_DownloadedData = pReply->readAll();
 		emit downloaded();
 	}
 	else {
-		emit downloadError();
+		qWarning() << "Got an error reply";
+		emit downloadError(pReply->error());
 	}
 	pReply->deleteLater();
 }

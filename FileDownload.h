@@ -21,7 +21,7 @@ public:
 
 signals:
 	void downloaded();
-	void downloadError();
+	void downloadError(QNetworkReply::NetworkError);
 
 private slots:
 	void fileDownloaded(QNetworkReply *pReply);

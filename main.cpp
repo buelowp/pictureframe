@@ -30,7 +30,9 @@ int main(int argc, char *argv[])
 	display.setFixedSize(QSize(width, height));
 
     if (display.init())
-		display.show();
+//    	display.go();
+	//	display.show();
+    	qWarning() << "Will do something soon";
 	else {
 		qWarning() << "display init failed";
 		exit(-1);

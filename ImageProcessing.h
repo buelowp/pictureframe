@@ -35,6 +35,7 @@ public:
 	void getContentList();
 	void checkFileExistsAndDownload(QString, QString);
 	void deleteUnusedFiles();
+	void go();
 
 public slots:
 	void timeout();
@@ -47,16 +48,23 @@ public slots:
 	void networkTest();
 	void fileDownloadComplete();
 	void contentListDownloadComplete();
-	void fileDownloadError();
+	void fileDownloadError(QNetworkReply::NetworkError);
+	void unlockShowEvent();
+
+signals:
+	void fileDownloadsComplete();
 
 protected:
 	void showEvent(QShowEvent*);
 
 private:
+	void downloadFile();
+
 	QTimer *pNextImage;
 	FileManagement fm;
 	int iImageIndex;
-	int iTimeout;
+	int m_ImageTimeout;
+	int m_NetTimeout;
 	QString path;
     bool bTurnOff;
 	QLabel *lbImage;
@@ -65,7 +73,11 @@ private:
     QUrl picXML;
     QMap<QString, QString> m_ImageList;
     QMutex m_downloadInProgress;
+    QMutex m_synchNetworkOperation;
+    QMutex m_synchFileDownload;
     QString m_fileInProgress;
+    bool m_notRunning;
+    QStringList m_delList;
 
     QMediaPlayer *player;
     QMediaPlaylist *playlist;
