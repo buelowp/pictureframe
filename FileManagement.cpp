@@ -11,14 +11,16 @@ FileManagement::FileManagement()
 {
 	m_index = 0;
 	m_FilePathIndex = 1;
-
-	// Create seed for the random
-	// That is needed only once on application startup
-	qsrand((uint)QTime::currentTime().msec());
 }
 
 FileManagement::~FileManagement()
 {
+}
+
+void FileManagement::reset()
+{
+	m_index = 0;
+	m_FilePathIndex = 1;
 }
 
 bool FileManagement::getFiles()
@@ -41,6 +43,7 @@ bool FileManagement::getFiles()
 		return false;
 	}
 
+	m_fileList.clear();
 	if (strOrderBy.compare("Name"), Qt::CaseInsensitive) 
 		currList.append(pImagePath->entryList(QDir::Files, QDir::Name));
 	else if (strOrderBy.compare("Time"), Qt::CaseInsensitive)
@@ -49,6 +52,9 @@ bool FileManagement::getFiles()
 		currList.append(pImagePath->entryList(QDir::Files, QDir::NoSort));
 	else
 		currList.append(pImagePath->entryList(QDir::Files, QDir::Time|QDir::Reversed));
+
+	if (path.left(path.size() - 1) != "/")
+		path.append("/");
 
 	for (int i = 0; i < currList.size(); i++) {
 		QString fn = currList.at(i);
@@ -68,6 +74,7 @@ bool FileManagement::isValid()
 bool FileManagement::init()
 {
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
+	QString randTest = settings.value("Random").toString();
 	bIsRandom = settings.value("Random").toBool();
 	strOrderBy = settings.value("OrderBy").toString();
 
@@ -79,8 +86,9 @@ bool FileManagement::init()
 	if (m_fileList.size() == 0)
 		return false;
 
+	std::srand(QDateTime::currentMSecsSinceEpoch());
 	if (bIsRandom) {
-		qDebug() << "Shuffling";
+		qWarning() << "Shuffling";
 		std::random_shuffle(m_fileList.begin(), m_fileList.end());
 	}
 
@@ -92,6 +100,7 @@ QString FileManagement::next()
 	if (m_index < m_fileList.size())
 		return m_fileList[m_index++];
 	else {
+		reset();
 		init();
 	}
 

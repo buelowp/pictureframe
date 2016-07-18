@@ -22,6 +22,9 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
     m_contentList = new FileDownload(this);
     m_imageFile = new FileDownload(this);
 
+	pNextImage = new QTimer();
+
+	connect(pNextImage, SIGNAL(timeout()), this, SLOT(timeout()));
     connect(m_contentList, SIGNAL(downloaded()), this, SLOT(contentListDownloadComplete()));
     connect(m_contentList, SIGNAL(downloadError()), this, SLOT(fileDownloadError()));
     connect(m_imageFile, SIGNAL(downloaded()), this, SLOT(fileDownloadComplete()));
@@ -36,18 +39,18 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
     videoWidget->hide();
 }
 
-ImageProcessing::~ImageProcessing() {
-	// TODO Auto-generated destructor stub
+ImageProcessing::~ImageProcessing()
+{
 }
 
 void ImageProcessing::durationChanged(qint64)
 {
-
+	qWarning() << "media duration changed";
 }
 
 void ImageProcessing::positionChanged(qint64)
 {
-
+	qWarning() << "media position changed";
 }
 
 void ImageProcessing::metaDataChanged()
@@ -77,10 +80,6 @@ bool ImageProcessing::init()
 		qWarning() << "The QMediaPlayer object does not have a valid service. Check plugins.";
 		return false;
 	}
-	pNextImage = new QTimer();
-	pNextImage->setInterval(iTimeout);
-	pNextImage->setSingleShot(true);
-	connect(pNextImage, SIGNAL(timeout()), this, SLOT(timeout()));
 	return true;
 }
 
@@ -123,6 +122,26 @@ void ImageProcessing::checkFileExistsAndDownload(QString name, QString url)
 			lbImage->setText(QString("Downloading %1").arg(url));
 			m_imageFile->getFile(url);
 		}
+	}
+}
+
+void ImageProcessing::deleteUnusedFiles()
+{
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
+	QString path = settings.value("ImagePath1").toString();
+	QDir *pImagePath = new QDir(path);;
+	QMapIterator<QString, QString> it(m_ImageList);
+
+	QStringList files = pImagePath->entryList();
+
+	while (it.hasNext()) {
+		it.next();
+		for (int i = 0; i < files.size(); i++) {
+			if (it.key() == files.at(i)) {
+				continue;
+			}
+		}
+		qDebug() << "Deleting" << it.key();
 	}
 }
 
@@ -171,6 +190,7 @@ void ImageProcessing::networkTest()
 			pNextImage->stop();
 			lbImage->setText("Getting more images");
 			getContentList();
+			deleteUnusedFiles();
 			QTimer::singleShot(3600000, this, SLOT(networkTest()));
 			fm.init();
 			timeout();
@@ -202,6 +222,7 @@ void ImageProcessing::timeout()
 		videoWidget->hide();
 		pNextImage->setInterval(iTimeout);
 		pNextImage->setSingleShot(true);
+		pNextImage->start();
 	}
 }
 
@@ -265,6 +286,6 @@ void ImageProcessing::showEvent(QShowEvent*)
 		lbImage->show();
 		pNextImage->setInterval(iTimeout);
 		pNextImage->setSingleShot(true);
-		videoWidget->hide();
+		pNextImage->start();
 	}
 }

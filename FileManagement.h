@@ -21,6 +21,7 @@ public:
 	QString next();
 	bool init();
 	bool isValid();
+	void reset();
 
 private:
 	bool getFiles();

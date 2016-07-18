@@ -34,6 +34,7 @@ public:
 	void getNewContent();
 	void getContentList();
 	void checkFileExistsAndDownload(QString, QString);
+	void deleteUnusedFiles();
 
 public slots:
 	void timeout();
