@@ -23,21 +23,13 @@ int main(int argc, char *argv[])
 
 	qWarning() << "width:" << width << ", height:" << height;
 
-//	display.setMinimumSize(width, height);
 	display.setStyleSheet("QMainWindow {background: 'black';}");
 	app.setOverrideCursor(QCursor(Qt::BlankCursor));
-//    display.showMaximized();
 	display.setFixedSize(QSize(width, height));
 
-    if (display.init())
-//    	display.go();
-	//	display.show();
-    	qWarning() << "Will do something soon";
-	else {
+    if (!display.init())
 		qWarning() << "display init failed";
-		exit(-1);
-	}
-
-	return app.exec();
+    else
+    	return app.exec();
 }
 

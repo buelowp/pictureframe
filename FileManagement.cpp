@@ -19,8 +19,6 @@ FileManagement::~FileManagement()
 
 void FileManagement::reset()
 {
-	m_index = 0;
-	m_FilePathIndex = 1;
 }
 
 bool FileManagement::getFiles()
@@ -32,14 +30,12 @@ bool FileManagement::getFiles()
 	QDir pImagePath;
 
 	if (path.size()) {
-		qWarning() << "getFiles:" << fileSetting << ": checking" << path;
+		qWarning() << __FUNCTION__ << ": " << fileSetting << ": checking" << path;
 		if (!pImagePath.cd(path))
 			return false;
 	}
 	else
 		return false;
-
-	m_fileList.clear();
 
 	if (strOrderBy.compare("Name"), Qt::CaseInsensitive) 
 		currList.append(pImagePath.entryList(QDir::Files|QDir::NoDotAndDotDot, QDir::Name));
@@ -49,6 +45,8 @@ bool FileManagement::getFiles()
 		currList.append(pImagePath.entryList(QDir::Files|QDir::NoDotAndDotDot, QDir::NoSort));
 	else
 		currList.append(pImagePath.entryList(QDir::Files|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed));
+
+	qWarning() << __FUNCTION__ << ": File list size is" << currList.size();
 
 	for (int i = 0; i < currList.size(); i++) {
 		QString fn = currList.at(i);
@@ -72,26 +70,39 @@ bool FileManagement::init()
 	bIsRandom = settings.value("Random").toBool();
 	strOrderBy = settings.value("OrderBy").toString();
 
+	m_index = 0;
 	m_FilePathIndex = 1;
 	m_fileList.clear();
+	qWarning() << __FUNCTION__ << ": list size is" << m_fileList.size() << "and m_index =" << m_index;
+
 	while (getFiles())
 		;
 
 	std::srand(QDateTime::currentMSecsSinceEpoch());
 	if (bIsRandom) {
-		qWarning() << "Shuffling";
 		std::random_shuffle(m_fileList.begin(), m_fileList.end());
 	}
 
 	return true;
 }
 
+bool FileManagement::isComplete()
+{
+	if (m_index == 0 && m_fileList.size() == 0) {
+		qWarning() << __FUNCTION__ << ": no content yet";
+		return false;
+	}
+	if (m_index >= m_fileList.size()) {
+		qWarning() << __FUNCTION__ << " : true";
+		return true;
+	}
+	return false;
+}
+
 QString FileManagement::next()
 {
-	if (m_index < m_fileList.size())
-		return m_fileList[m_index++];
-	else {
-		reset();
+	if (isComplete()) {
+		qWarning() << __FUNCTION__ << ": running isComplete from next()";
 		init();
 	}
 

@@ -22,6 +22,7 @@ public:
 	bool init();
 	bool isValid();
 	void reset();
+	bool isComplete();
 
 private:
 	bool getFiles();

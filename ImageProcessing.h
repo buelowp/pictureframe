@@ -35,7 +35,6 @@ public:
 	void getContentList();
 	void checkFileExistsAndDownload(QString, QString);
 	void deleteUnusedFiles();
-	void go();
 
 public slots:
 	void timeout();
@@ -45,7 +44,7 @@ public slots:
 	void durationChanged(qint64);
 	void positionChanged(qint64);
 	void metaDataChanged();
-	void networkTest();
+	void checkNetwork();
 	void fileDownloadComplete();
 	void contentListDownloadComplete();
 	void fileDownloadError(QNetworkReply::NetworkError);
@@ -59,6 +58,7 @@ protected:
 
 private:
 	void downloadFile();
+	void showLocalImage();
 
 	QTimer *pNextImage;
 	FileManagement fm;
@@ -72,9 +72,6 @@ private:
     QString onTime;
     QUrl picXML;
     QMap<QString, QString> m_ImageList;
-    QMutex m_downloadInProgress;
-    QMutex m_synchNetworkOperation;
-    QMutex m_synchFileDownload;
     QString m_fileInProgress;
     bool m_notRunning;
     QStringList m_delList;

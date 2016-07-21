@@ -25,7 +25,6 @@ ImageProcessing::ImageProcessing(QWidget *parent) : QMainWindow(parent) {
     m_imageFile = new FileDownload(this);
 
 	pNextImage = new QTimer();
-	m_synchNetworkOperation.unlock();
 
 	connect(pNextImage, SIGNAL(timeout()), this, SLOT(timeout()));
     connect(m_contentList, SIGNAL(downloaded()), this, SLOT(contentListDownloadComplete()));
@@ -49,17 +48,17 @@ ImageProcessing::~ImageProcessing()
 
 void ImageProcessing::durationChanged(qint64)
 {
-	qWarning() << "media duration changed";
+	qWarning() << __FUNCTION__ << ": media duration changed";
 }
 
 void ImageProcessing::positionChanged(qint64)
 {
-	qWarning() << "media position changed";
+	qWarning() << __FUNCTION__ << ": media position changed";
 }
 
 void ImageProcessing::metaDataChanged()
 {
-	qWarning() << "Metadata changed in video file";
+	qWarning() << __FUNCTION__ << ": metadata changed in video file";
 }
 
 bool ImageProcessing::init()
@@ -78,10 +77,10 @@ bool ImageProcessing::init()
 	lbImage->setGeometry(0, 0, width(), height());
 	lbImage->setAlignment(Qt::AlignCenter);
 
-	networkTest();
+	checkNetwork();
 
 	if (!player->isAvailable()) {
-		qWarning() << "The QMediaPlayer object does not have a valid service. Check plugins.";
+		qWarning() << __FUNCTION__ << ": The QMediaPlayer object does not have a valid service. Check plugins.";
 		return false;
 	}
 	return true;
@@ -90,28 +89,28 @@ bool ImageProcessing::init()
 void ImageProcessing::unlockShowEvent()
 {
 	deleteUnusedFiles();
-	QTimer::singleShot(m_NetTimeout, this, SLOT(networkTest()));
-	fm.init();
 
 	if (m_notRunning) {
+		qWarning() << __FUNCTION__ << ": not running";
+		m_notRunning = false;
 		show();
 	}
 	else {
-		timeout();
+		qWarning() << __FUNCTION__ << ": running";
+		showLocalImage();
 	}
 }
 
 void ImageProcessing::getContentList()
 {
-	qWarning() << "Getting" << picXML << "from server";
+	qWarning() << __FUNCTION__ << ": Getting" << picXML << "from server";
 	m_fileInProgress = picXML.fileName();
 	m_contentList->getFile(picXML);
 }
 
 void ImageProcessing::fileDownloadError(QNetworkReply::NetworkError error)
 {
-	qWarning() << "Unable to download" << m_fileInProgress << "with error" << error;
-	m_downloadInProgress.unlock();
+	qWarning() << __FUNCTION__ << ": Unable to download" << m_fileInProgress << "with error" << error;
 }
 
 void ImageProcessing::fileDownloadComplete()
@@ -121,11 +120,9 @@ void ImageProcessing::fileDownloadComplete()
 	QString dlLocation = path + "/" + m_fileInProgress;
 	QFile f(dlLocation);
 
-	qWarning() << "fileDownloadComplete:" << dlLocation;
-
 	if (f.open(QIODevice::WriteOnly)) {
 		QDataStream out(&f);
-		out << m_imageFile->downloadedData();
+		out.writeRawData(m_imageFile->downloadedData().data(), m_imageFile->downloadedData().size());
 		f.close();
 	}
 	m_fileInProgress.clear();
@@ -137,19 +134,16 @@ void ImageProcessing::checkFileExistsAndDownload(QString name, QString url)
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
 	QDir pImagePath(settings.value("ImagePath1").toString());
 
-	qWarning() << "Checking for" << name << "at path" << pImagePath.absolutePath();
-
 	if (pImagePath.exists()) {
 		QStringList l = pImagePath.entryList();
 		if (!l.contains(name)) {
-			qWarning() << "Unable to find" << name;
 			m_fileInProgress = name;
-			lbImage->setText(QString("Downloading %1").arg(url));
+			qWarning() << __FUNCTION__ << ": Downloading" << name;
 			m_imageFile->getFile(url);
 		}
 		else {
-			qWarning() << "Found" << name;
 			m_fileInProgress.clear();
+			qWarning() << __FUNCTION__ << ": going recursive";
 			downloadFile();
 		}
 	}
@@ -163,16 +157,19 @@ void ImageProcessing::deleteUnusedFiles()
 	QMapIterator<QString, QString> it(m_ImageList);
 	QStringList files = pImagePath.entryList(QDir::Files|QDir::NoDotAndDotDot, QDir::Name);
 
-
 	QSet<QString> fromLocal = QSet<QString>::fromList(files);
 	QSet<QString> fromServer = QSet<QString>::fromList(m_delList);
 
+	qWarning() << __FUNCTION__ << ": there are" << files.size() << "local files";
+	qWarning() << __FUNCTION__ << ": there are" << m_delList.size() << "files in the delete list";
 	fromLocal.subtract(fromServer);
-	qWarning() << "Checking" << pImagePath.absolutePath() << "to find files that should be removed";
+	qWarning() << __FUNCTION__ << ": The list of files to delete has" << fromLocal.size() << "entries";
 	QSetIterator<QString> toDel(fromLocal);
 	while (toDel.hasNext()) {
 		QString file = pImagePath.absolutePath() + "/" + toDel.next();
-		qWarning() << "Deletting" << file;
+		qWarning() << __FUNCTION__ << ": Deleting" << file;
+		QFile f(file);
+		f.remove();
 	}
 }
 
@@ -180,13 +177,13 @@ void ImageProcessing::downloadFile()
 {
 	if (m_ImageList.size()) {
 		QMap<QString,QString>::iterator element = m_ImageList.begin();
-		qWarning() << "Size is" << m_ImageList.size() << "Downloading" << element.key();
 		QString key = element.key();
 		QString value = element.value();
 		m_ImageList.erase(element);
 		checkFileExistsAndDownload(key, value);
 	}
 	else {
+		qWarning() << __FUNCTION__ << ": Done retrieving network contents";
 		emit fileDownloadsComplete();
 	}
 }
@@ -194,9 +191,11 @@ void ImageProcessing::downloadFile()
 void ImageProcessing::contentListDownloadComplete()
 {
 	QXmlStreamReader doc(m_contentList->downloadedData());
+	m_ImageList.clear();
+	m_delList.clear();
 
 	if (doc.hasError()) {
-		qWarning() << "Downloaded xml has errors";
+		qWarning() << __FUNCTION__ << ": Downloaded xml has errors";
 		return;
 	}
 	else {
@@ -211,21 +210,23 @@ void ImageProcessing::contentListDownloadComplete()
 					if (url.isValid()) {
 						m_ImageList[url.fileName()] = url.toDisplayString();
 						m_delList << url.fileName();
-						qWarning() << "Adding" << url.fileName() << "with URL" << url.toDisplayString();
 					}
 				}
 			}
 		}
+		qWarning() << __FUNCTION__ << ": parsed contentlist.xml for" << m_ImageList.size() << "elements";
 		downloadFile();
 	}
 }
 
-void ImageProcessing::networkTest()
+void ImageProcessing::checkNetwork()
 {
+	bool running = false;
 	QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
 
-	qWarning() << "Running the network check";
+	qWarning() << __FUNCTION__ << ": Running the network check";
 	if (pNextImage->isActive()) {
+		qWarning() << __FUNCTION__ << ": Turning off image display timer";
 		pNextImage->stop();
 	}
 	for (int i = 0; i < interfaces.size(); i++) {
@@ -233,61 +234,36 @@ void ImageProcessing::networkTest()
 		if (ni.name() == "lo")
 			continue;
 
-		qWarning() << "Checking" << ni.name() << " with flags" << ni.flags();
+		qWarning() << __FUNCTION__ << ": Checking interface" << ni.name() << " with flags" << ni.flags();
 
 		if (ni.flags().testFlag(QNetworkInterface::IsUp) && ni.flags().testFlag(QNetworkInterface::IsRunning)) {
-			pNextImage->stop();
-			lbImage->setText("Checking for new images");
+			running = true;
 			getContentList();
 		}
 	}
-}
-
-void ImageProcessing::timeout()
-{
-	QString nextImage = fm.next();
-	qWarning() << "timeout: nextImage:" << nextImage;
-
-	if (nextImage.endsWith(".mp4")) {
-		QUrl url = QUrl::fromLocalFile(nextImage);
-		playlist->addMedia(url);
-		lbImage->hide();
-		videoWidget->show();
-		player->play();
-	}
-	else {
-		QPixmap image(nextImage);
-
-		if (image.width() > image.height())
-			lbImage->setPixmap(image.scaledToWidth(width()));
-		else
-			lbImage->setPixmap(image.scaledToHeight(height()));
-
-		lbImage->show();
-		videoWidget->hide();
-		pNextImage->setInterval(m_ImageTimeout);
-		pNextImage->setSingleShot(true);
-		pNextImage->start();
+	if (!running) {
+		qWarning() << __FUNCTION__ << ": Network check didn't find an available interface";
+		showLocalImage();
 	}
 }
 
 void ImageProcessing::displayErrorMessage()
 {
-	qWarning() << "Video Player Error:" << player->errorString();
+	qWarning() << __FUNCTION__ << "Video Player Error:" << player->errorString();
 }
 
 void ImageProcessing::mediaStatusChanged(QMediaPlayer::MediaStatus status)
 {
 	switch (status) {
 	case QMediaPlayer::EndOfMedia:
-		qWarning() << "Finished playing video";
+		qWarning() << __FUNCTION__ << ": Finished playing video";
 		QTimer::singleShot(0, this, SLOT(timeout()));
 		break;
 	case QMediaPlayer::InvalidMedia:
-		qWarning() << "InvalidMedia Error:" << player->errorString();
+		qWarning() << __FUNCTION__ << ": InvalidMedia Error:" << player->errorString();
 		break;
 	default:
-		qWarning() << "Media Status Changed:" << status;
+		qWarning() << __FUNCTION__ << ": Media Status Changed:" << status;
 	}
 }
 
@@ -295,21 +271,41 @@ void ImageProcessing::mediaStateChanged(QMediaPlayer::State state)
 {
 	switch (state) {
 	case QMediaPlayer::StoppedState:
-		qWarning() << "Got a stop state message";
+		qWarning() << __FUNCTION__ << ": Got a stop state message";
 		break;
 	case QMediaPlayer::PlayingState:
-		qWarning() << "Got a playing state message";
+		qWarning() << __FUNCTION__ << ": Got a playing state message";
 		break;
 	case QMediaPlayer::PausedState:
-		qWarning() << "Got a paused state message";
+		qWarning() << __FUNCTION__ << ": Got a paused state message";
 		break;
+	}
+}
+
+void ImageProcessing::timeout()
+{
+	qWarning() << __FUNCTION__;
+	if (fm.isComplete()) {
+		qWarning() << __FUNCTION__ << ": running network check from isComplete = true";
+		checkNetwork();
+	}
+	else {
+		showLocalImage();
 	}
 }
 
 void ImageProcessing::showEvent(QShowEvent*)
 {
+	qWarning() << __FUNCTION__;
+	fm.init();
+	showLocalImage();
+}
+
+void ImageProcessing::showLocalImage()
+{
 	QString nextImage = fm.next();
-	qWarning() << "showevent: nextImage:" << nextImage;
+	qWarning() << __FUNCTION__ << ": showing" << nextImage;
+
 	if (nextImage.endsWith(".mp4")) {
 		QUrl url = QUrl::fromLocalFile(nextImage);
 		playlist->addMedia(url);
@@ -325,11 +321,11 @@ void ImageProcessing::showEvent(QShowEvent*)
 		else
 			lbImage->setPixmap(image.scaledToHeight(height()));
 
-		videoWidget->hide();
 		lbImage->show();
+		videoWidget->hide();
+		qWarning() << __FUNCTION__ << ": Starting timer with timeout" << m_ImageTimeout;
 		pNextImage->setInterval(m_ImageTimeout);
 		pNextImage->setSingleShot(true);
 		pNextImage->start();
 	}
-	m_notRunning = false;
 }
