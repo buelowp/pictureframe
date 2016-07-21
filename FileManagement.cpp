@@ -32,7 +32,7 @@ bool FileManagement::getFiles()
 	QDir pImagePath;
 
 	if (path.size()) {
-		qWarning() << "getFiles: checking" << path;
+		qWarning() << "getFiles:" << fileSetting << ": checking" << path;
 		if (!pImagePath.cd(path))
 			return false;
 	}
@@ -76,9 +76,6 @@ bool FileManagement::init()
 	m_fileList.clear();
 	while (getFiles())
 		;
-
-	if (m_fileList.size() == 0)
-		return false;
 
 	std::srand(QDateTime::currentMSecsSinceEpoch());
 	if (bIsRandom) {

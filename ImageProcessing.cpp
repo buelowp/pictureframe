@@ -78,14 +78,12 @@ bool ImageProcessing::init()
 	lbImage->setGeometry(0, 0, width(), height());
 	lbImage->setAlignment(Qt::AlignCenter);
 
-	if (!fm.init())
-		return false;
+	networkTest();
 
 	if (!player->isAvailable()) {
 		qWarning() << "The QMediaPlayer object does not have a valid service. Check plugins.";
 		return false;
 	}
-	networkTest();
 	return true;
 }
 
@@ -118,13 +116,18 @@ void ImageProcessing::fileDownloadError(QNetworkReply::NetworkError error)
 
 void ImageProcessing::fileDownloadComplete()
 {
-	QFile f(m_fileInProgress);
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
+	QString path = settings.value("ImagePath1").toString();
+	QString dlLocation = path + "/" + m_fileInProgress;
+	QFile f(dlLocation);
+
+	qWarning() << "fileDownloadComplete:" << dlLocation;
 
 	if (f.open(QIODevice::WriteOnly)) {
 		QDataStream out(&f);
 		out << m_imageFile->downloadedData();
+		f.close();
 	}
-	f.close();
 	m_fileInProgress.clear();
 	downloadFile();
 }
@@ -221,6 +224,7 @@ void ImageProcessing::networkTest()
 {
 	QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
 
+	qWarning() << "Running the network check";
 	if (pNextImage->isActive()) {
 		pNextImage->stop();
 	}
