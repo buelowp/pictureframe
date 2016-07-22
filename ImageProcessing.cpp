@@ -81,8 +81,8 @@ bool ImageProcessing::init()
 
 	if (!player->isAvailable()) {
 		qWarning() << __FUNCTION__ << ": The QMediaPlayer object does not have a valid service. Check plugins.";
-		return false;
 	}
+
 	return true;
 }
 

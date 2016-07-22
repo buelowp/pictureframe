@@ -25,6 +25,7 @@ signals:
 
 private slots:
 	void fileDownloaded(QNetworkReply *pReply);
+	void sslError(QNetworkReply *reply, const QList<QSslError>&);
 
 private:
 	QNetworkAccessManager m_WebCtrl;

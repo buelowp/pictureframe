@@ -9,12 +9,19 @@
 
 FileDownload::FileDownload(QObject *parent) : QObject(parent)
 {
-	connect(&m_WebCtrl, SIGNAL (finished(QNetworkReply*)), this, SLOT (fileDownloaded(QNetworkReply*)));
+	connect(&m_WebCtrl, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileDownloaded(QNetworkReply*)));
+	connect(&m_WebCtrl, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError>&)),
+			this, SLOT(sslError(QNetworkReply*, const QList<QSslError>&)));
 }
 
 FileDownload::~FileDownload()
 {
 	// TODO Auto-generated destructor stub
+}
+
+void FileDownload::sslError(QNetworkReply *reply, const QList<QSslError>&)
+{
+	reply->ignoreSslErrors();
 }
 
 void FileDownload::getFile(QUrl imageUrl)
