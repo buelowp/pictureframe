@@ -111,6 +111,13 @@ void ImageProcessing::getContentList()
 void ImageProcessing::fileDownloadError(QNetworkReply::NetworkError error)
 {
 	qWarning() << __FUNCTION__ << ": Unable to download" << m_fileInProgress << "with error" << error;
+	if (m_fileInProgress == "contentlist.xml") {
+		timeout();
+	}
+	else {
+		m_fileInProgress.clear();
+		downloadFile();
+	}
 }
 
 void ImageProcessing::fileDownloadComplete()
@@ -231,7 +238,7 @@ void ImageProcessing::checkNetwork()
 	}
 	for (int i = 0; i < interfaces.size(); i++) {
 		QNetworkInterface ni = interfaces[i];
-		if (ni.name() == "lo")
+		if (ni.name() != "wlan0")
 			continue;
 
 		qWarning() << __FUNCTION__ << ": Checking interface" << ni.name() << " with flags" << ni.flags();
