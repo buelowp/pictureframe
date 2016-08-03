@@ -13,3 +13,7 @@ SOURCES += main.cpp\
 HEADERS  += ImageProcessing.h \
 	FileManagement.h  \
 	FileDownload.h
+
+target.path = /usr/local/bin
+INSTALLS += target
+
