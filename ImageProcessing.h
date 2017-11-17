@@ -70,6 +70,7 @@ private:
 	QLabel *lbImage;
     QString offTime;
     QString onTime;
+    QString m_networkInterface;
     QUrl picXML;
     QMap<QString, QString> m_ImageList;
     QString m_fileInProgress;

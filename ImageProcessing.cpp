@@ -68,6 +68,7 @@ bool ImageProcessing::init()
 	m_NetTimeout = settings.value("NetworkTimeout", 60000).toInt();
     bTurnOff = settings.value("TurnOff", false).toBool();
     picXML.setUrl(settings.value("URL").toString());
+    m_networkInterface = settings.value("Network").toString();
     
     if (bTurnOff) {
         offTime = settings.value("OffTime", "17:00").toString();
@@ -238,7 +239,7 @@ void ImageProcessing::checkNetwork()
 	}
 	for (int i = 0; i < interfaces.size(); i++) {
 		QNetworkInterface ni = interfaces[i];
-		if (ni.name() != "wlan0")
+		if (ni.name() != m_networkInterface)
 			continue;
 
 		qWarning() << __FUNCTION__ << ": Checking interface" << ni.name() << " with flags" << ni.flags();
