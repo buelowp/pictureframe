@@ -1,16 +1,36 @@
-# Picture Frame
+# Rasberry PI Picture Frame
 
 ## Premise
-So, with the rise of low cost ARM boards which have good graphical capability, specifically to decode video playback, my goal was to create my own Qt5 application which is able to show me pictures, playback videos, and provide an easy network based upload mechanism. I know you can buy these, but the resolution is terrible, and generally they are expensive or look/work terrible.
+The idea is that lots of low cost digital picture frames exist in the world today. Some are
+even connected. But they lack in a lot of places specific to what I want. So, I built my own.
+This is based on the Pi 3 or Pi Zero W, uses Qt5, and must be network connected. I have
+some PHP server code that sits on my little web server which allows me to upload pictures
+to the server, and then the Pi will go ask the server every hour for those pictures. It
+allows for people to share pictures across different displays by simply logging in and
+uploading images you want the other person to see. Granted, there are a lot of abuses
+that can be done here, but honestly, it's just for me and my wife.
 
-## Design
-So, you start with Qt5, and make it show images. It needs to be compatible with Qt5 to make the best use of gstreamer and QtMultimedia. Then, you add video playback, and finally, add in a web upload capacity. Make sure you include instructions for how to get it running on an RPI, and away you go.
+## Dependencies
 
-The design breaks down into a few differen classes to handle the Qt work, and a configuration file for defining some runtime values. To make sure you don't need to do anything special, make it possible to recognize changes to the filesystem so that new images or videos can be added to the rotation as soon as they are uploaded.
+```bash
+sudo apt update
+sudo apt install qt5-default qt5-qmake
+sudo apt install qtmultimedia5-dev libqt5multimediawidgets5 libqt5multimedia5-plugins libqt5multimedia5
+git clone git@github.com:buelowp/pictureframe.git
+cd pictureframe
+qmake
+make
+mkdir -p ~/.config/Home
+cp PictureViewer.ini ~/.config/Home
+```
 
-## Install
-TODO
+Copy the binary pictureframe to /usr/bin, then edit your startup script to run at boot.
 
-## Usage
-TODO
+Finally, edit PictureViewer.ini to point to the right Images folder on your pi, update the URL to
+download the contentlist.xml file from the right server location, and change the Network parameter
+to point to the correct network interface you use for getting onto the internet. Mostly this will
+be wlan0, but may be eth0 if you are wired.
+
+# Future plans
+I'd like it to play back videos as well, but so far, that hasn't worked very well.
 
