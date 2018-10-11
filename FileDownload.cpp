@@ -16,11 +16,11 @@ FileDownload::FileDownload(QObject *parent) : QObject(parent)
 
 FileDownload::~FileDownload()
 {
-	// TODO Auto-generated destructor stub
 }
 
 void FileDownload::sslError(QNetworkReply *reply, const QList<QSslError>&)
 {
+    qDebug() << __PRETTY_FUNCTION__ << ": SSL error";
 	reply->ignoreSslErrors();
 }
 
@@ -36,7 +36,7 @@ void FileDownload::fileDownloaded(QNetworkReply* pReply)
 	if (pReply->error() == QNetworkReply::NoError) {
 		m_DownloadedData = pReply->readAll();
 		qWarning() << __FUNCTION__ << ": Got a file, emitting downloaded message";
-		emit downloaded();
+		emit downloadFinished();
 	}
 	else {
 		qWarning() << __FUNCTION__ << "Got an error reply";
@@ -45,7 +45,7 @@ void FileDownload::fileDownloaded(QNetworkReply* pReply)
 	pReply->deleteLater();
 }
 
-QByteArray FileDownload::downloadedData()
+QByteArray FileDownload::getFileContents()
 {
 	return m_DownloadedData;
 }

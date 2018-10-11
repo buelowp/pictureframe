@@ -5,22 +5,26 @@
  *      Author: pete
  */
 
-#ifndef FILEDOWNLOAD_H_
-#define FILEDOWNLOAD_H_
+#ifndef __FILEDOWNLOAD_H_
+#define __FILEDOWNLOAD_H_
 
 #include <QtCore/QtCore>
 #include <QtNetwork/QtNetwork>
 
+/**
+ * \class FileDownload
+ * Provides a Qt download class to get image and content files from the server
+ */
 class FileDownload : public QObject {
 	Q_OBJECT
 public:
 	FileDownload(QObject *parent = 0);
 	virtual ~FileDownload();
-	QByteArray downloadedData();
+	QByteArray getFileContents();
 	void getFile(QUrl imageUrl);
 
 signals:
-	void downloaded();
+	void downloadFinished();
 	void downloadError(QNetworkReply::NetworkError);
 
 private slots:

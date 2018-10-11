@@ -13,27 +13,25 @@
 #include <cstdlib>
 #include <algorithm>
 
+/**
+ * \class FileManagement
+ * \brief Contains and manages the file list to be displayed
+ */
 class FileManagement {
 public:
 	FileManagement();
 	virtual ~FileManagement();
 
-	QString next();
-	bool init();
-	bool isValid();
-	void reset();
-	bool isComplete();
+	bool nextFileInList(QString&);
+	int updateLocalFileList();
+    bool deleteFile(QString&);
 
 private:
-	bool getFiles();
 
-	QString parentPath;
-	QStringList m_fileList;
-	bool bIsRandom;
-	int m_index;
-	QString strOrderBy;
-	QVector<int> randomOrder;
-	int m_FilePathIndex;
+	QStringList m_fileList;        /**< QStringList holding all currently available files */
+	bool m_isRandom;               /**< boolean indicating whether list is randomized */
+	int m_fileIndex;               /**< integer index for next available file in list */
+	QString m_orderBy;             /**< QString indicating ordering */
 };
 
 #endif /* FILEMANAGEMENT_H_ */
