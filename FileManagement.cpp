@@ -88,10 +88,10 @@ bool FileManagement::nextFileInList(QString &fn)
     if (m_fileList.size() == 0)
         return false;
 
-    if (m_fileIndex >= m_fileList.size()) {
+    if (m_fileIndex >= m_fileList.size())
         m_fileIndex = 0;
 
-	fn = m_fileList[m_fileIndex++];
+    fn = m_fileList[m_fileIndex++];
     return true;
 }
 
@@ -101,4 +101,23 @@ bool FileManagement::deleteFile(QString &fn)
         return QFile::remove(fn);
 
     return true;
+}
+
+bool FileManagement::fileExists(QString fn)
+{
+	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
+    QString path = settings.value("ImagePath1").toString();
+    QDir images(path);
+
+    qDebug() << __PRETTY_FUNCTION__ << ": Checking" << path << " for file" << fn;
+    if (images.exists()) {
+        QStringList files = images.entryList(QDir::Files|QDir::NoDotAndDotDot);
+        if (files.size()) {
+            foreach (const QString &file, files) {
+                if (file.contains(fn))
+                    return true;
+            }
+        }
+    }
+    return false;
 }

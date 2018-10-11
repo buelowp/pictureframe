@@ -28,22 +28,19 @@ public:
 	PictureFrame(QWidget *parent = 0);
 	virtual ~PictureFrame();
 
-	bool init();
 	void menu();
 	bool validateOptions();
 	void getNewContent();
-	void checkFileExistsAndDownload(QString, QString);
-	void deleteUnusedFiles();
+	void getNewFiles(QMap<QString,QString>);
+	void deleteRemovedFiles(QStringList&);
 
 public slots:
-	void nextImageTimeout();
-	void displayErrorMessage();
-	void checkNetwork();
 	void fileDownloadComplete();
 	void downloadContentListComplete();
-	void fileDownloadError(QNetworkReply::NetworkError);
-	void unlockShowEvent();
+	void downloadContentListFailed(QNetworkReply::NetworkError);
+	void downloadFileFailed(QNetworkReply::NetworkError);
 	void downloadContentList();
+	void displayNextImage();
 
 signals:
 	void fileDownloadsComplete();
@@ -53,7 +50,6 @@ protected:
 
 private:
 	void downloadFile();
-	void showLocalImage();
 
 	QTimer *m_nextImageTimer;
     QTimer *m_getNewContentListTimer;
@@ -61,10 +57,12 @@ private:
 	int m_NetTimeout;
     bool m_turnOff;
 	QLabel *m_image;
-    QString offTime;
-    QString onTime;
+    QTime m_offTime;
+    QTime m_onTime;
     QUrl m_contentFileURL;
+    QUrl m_urlInProgress;
     QString m_fileInProgress;
+    QMutex m_downloadMutex;
 
 	FileManagement *m_fileManager;
     FileDownload *m_contentList;

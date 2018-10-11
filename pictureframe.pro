@@ -1,16 +1,15 @@
 CONFIG += qt debug
-QT += core gui widgets
-QT += multimedia multimediawidgets
+QT += core gui widgets network
 
 TARGET = pictureframe
 TEMPLATE = app
 
 SOURCES += main.cpp\
-        ImageProcessing.cpp \
+        PictureFrame.cpp \
         FileManagement.cpp  \
         FileDownload.cpp
 
-HEADERS  += ImageProcessing.h \
+HEADERS  += PictureFrame.h \
 	FileManagement.h  \
 	FileDownload.h
 

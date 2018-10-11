@@ -9,12 +9,13 @@
 #include <QtWidgets/QApplication>
 #include <QtCore/QDebug>
 #include <QtNetwork/QtNetwork>
-#include "ImageProcessing.h"
+
+#include "PictureFrame.h"
 
 int main(int argc, char *argv[])
 {
 	QApplication app(argc, argv);
-	ImageProcessing display;
+	PictureFrame display;
 	int width, height;
 
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
@@ -27,9 +28,6 @@ int main(int argc, char *argv[])
 	app.setOverrideCursor(QCursor(Qt::BlankCursor));
 	display.setFixedSize(QSize(width, height));
 
-    if (!display.init())
-		qWarning() << "display init failed";
-    else
-    	return app.exec();
+   	return app.exec();
 }
 

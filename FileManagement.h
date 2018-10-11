@@ -25,6 +25,7 @@ public:
 	bool nextFileInList(QString&);
 	int updateLocalFileList();
     bool deleteFile(QString&);
+    bool fileExists(QString);
 
 private:
 
