@@ -22,15 +22,15 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
         m_onTime = QTime::fromString(settings.value("OnTime", "7:00").toString(), "h:mm");
     }
 
-	m_image->setGeometry(0, 0, width(), height());
+	m_image = new QLabel(this);
 	m_image->setAlignment(Qt::AlignCenter);
 
-	m_image = new QLabel(this);
     m_turnOff = false;
-	setWindowState(Qt::WindowFullScreen);
+//	setWindowState(Qt::WindowFullScreen);
 
     m_contentList = new FileDownload(this);
     m_imageFile = new FileDownload(this);
+    m_fileManager = new FileManagement();
 
 	m_nextImageTimer = new QTimer(this);
     m_getNewContentListTimer = new QTimer(this);
@@ -74,6 +74,7 @@ void PictureFrame::fileDownloadComplete()
 	QString dlLocation = path + "/" + m_fileInProgress;
 	QFile f(dlLocation);
 
+    qDebug() << __PRETTY_FUNCTION__ << ": got data for" << m_fileInProgress;
 	if (f.open(QIODevice::WriteOnly)) {
 		QDataStream out(&f);
         QByteArray data = m_imageFile->getFileContents();
@@ -119,9 +120,14 @@ void PictureFrame::getNewFiles(QMap<QString,QString> imageList)
         m_downloadMutex.lock();
         it.next();
         if (!m_fileManager->fileExists(it.key())) {
+        qDebug() << __PRETTY_FUNCTION__ << ": getting file" << it.key();
             m_imageFile->getFile(QUrl(it.value()));
             m_fileInProgress = it.key();
             m_urlInProgress = QUrl(it.value());
+        }
+        else {
+            qDebug() << __PRETTY_FUNCTION__ << ": file exists, move along";
+            m_downloadMutex.unlock();
         }
     }
 }
@@ -132,6 +138,8 @@ void PictureFrame::downloadContentListComplete()
     QStringList deleteList;
 	QXmlStreamReader doc(m_contentList->getFileContents());
 
+    m_nextImageTimer->stop();
+    
 	if (doc.hasError()) {
 		qWarning() << __FUNCTION__ << ": Downloaded xml has errors";
 		return;
@@ -152,17 +160,20 @@ void PictureFrame::downloadContentListComplete()
 				}
 			}
 		}
+        m_fileManager->updateLocalFileList();
 		if (!imageList.empty()) {
             getNewFiles(imageList);
             deleteRemovedFiles(deleteList);
         }
 	}
 	m_getNewContentListTimer->start(PF_ONE_HOUR);
+    displayNextImage();
 }
 
 void PictureFrame::showEvent(QShowEvent*)
 {
-	qDebug() << __FUNCTION__;
+	qDebug() << __FUNCTION__ << ": width:" << width() << ", height:" << height();
+    m_image->resize(width(), height());
 	displayNextImage();
 }
 
@@ -170,22 +181,26 @@ void PictureFrame::displayNextImage()
 {
 	QString image;
 
-    if (m_fileManager->nextFileInList(image)) {
-        qDebug() << __FUNCTION__ << ": showing" << image;
+    while (true) {
+        if (m_fileManager->nextFileInList(image)) {
+            QPixmap pm(image);
+            if (pm.isNull())
+                continue;
 
-        QPixmap pm(image);
+            qDebug() << __FUNCTION__ << ": showing" << image << "at" << width() << ":" << height();
+            if (pm.width() > pm.height())
+                m_image->setPixmap(pm.scaledToWidth(width()));
+            else
+                m_image->setPixmap(pm.scaledToHeight(height()));
+        }
+        else {
+            m_image->setText("Image not available");
+        }
 
-        if (pm.width() > pm.height())
-            m_image->setPixmap(pm.scaledToWidth(width()));
-        else
-            m_image->setPixmap(pm.scaledToHeight(height()));
+        m_image->show();
+        m_nextImageTimer->setInterval(m_ImageTimeout);
+        m_nextImageTimer->setSingleShot(true);
+        m_nextImageTimer->start();
+        break;
     }
-    else {
-        m_image->setText("Image not available");
-    }
-    
-	qWarning() << __FUNCTION__ << ": Starting timer with timeout" << m_ImageTimeout;
-	m_nextImageTimer->setInterval(m_ImageTimeout);
-	m_nextImageTimer->setSingleShot(true);
-	m_nextImageTimer->start();
 }

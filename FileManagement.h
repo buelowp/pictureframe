@@ -29,7 +29,7 @@ public:
 
 private:
 
-	QStringList m_fileList;        /**< QStringList holding all currently available files */
+	QStringList m_localFiles;        /**< QStringList holding all currently available files */
 	bool m_isRandom;               /**< boolean indicating whether list is randomized */
 	int m_fileIndex;               /**< integer index for next available file in list */
 	QString m_orderBy;             /**< QString indicating ordering */
