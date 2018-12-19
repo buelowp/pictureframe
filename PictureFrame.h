@@ -65,8 +65,7 @@ private:
     QMutex m_downloadMutex;
 
 	FileManagement *m_fileManager;
-    FileDownload *m_contentList;
-    FileDownload *m_imageFile;
+    FileDownload *m_download;
 };
 
 #endif /* IMAGEPROCESSING_H_ */

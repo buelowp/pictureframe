@@ -25,15 +25,32 @@ public:
 
 signals:
 	void downloadFinished();
+    void contentListFinished();
 	void downloadError(QNetworkReply::NetworkError);
 
-private slots:
-	void fileDownloaded(QNetworkReply *pReply);
-	void sslError(QNetworkReply *reply, const QList<QSslError>&);
-
+public slots:
+	void fileDownloaded(QNetworkReply*);
+	void sslError(QNetworkReply*, const QList<QSslError>&);
+    void authenticationRequired(QNetworkReply*, QAuthenticator*);
+    void encrypted(QNetworkReply*);
+    void networkAccessibleChanged(QNetworkAccessManager::NetworkAccessibility );
+    void preSharedKeyAuthenticationRequired(QNetworkReply*, QSslPreSharedKeyAuthenticator*);
+    void proxyAuthenticationRequired(const QNetworkProxy&, QAuthenticator*);
+    void downloadProgress(qint64, qint64);
+    void encrypted();
+    void replyError(QNetworkReply::NetworkError);
+    void finished();
+    void metaDataChanged();
+    void preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator*);
+    void redirectAllowed();
+    void redirected(const QUrl&);
+    void sslErrors(const QList<QSslError>&);
+    
 private:
-	QNetworkAccessManager m_WebCtrl;
+	QNetworkAccessManager *m_WebCtrl;
+    QNetworkReply *m_reply;
 	QByteArray m_DownloadedData;
+    bool m_isContentList;
 };
 
 #endif /* FILEDOWNLOAD_H_ */

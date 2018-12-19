@@ -22,13 +22,11 @@ int main(int argc, char *argv[])
 	width = settings.value("Width", 100).toInt();
 	height = settings.value("Height", 100).toInt();
 
-	qWarning() << "width:" << width << ", height:" << height;
-
 	display.setStyleSheet("QMainWindow {background: 'black';}");
 	app.setOverrideCursor(QCursor(Qt::BlankCursor));
 	display.setFixedSize(QSize(width, height));
-    display.showFullScreen();
-	display.show();
+    display.downloadContentList();
+//	display.show();
 
    	return app.exec();
 }

@@ -26,10 +26,8 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
 	m_image->setAlignment(Qt::AlignCenter);
 
     m_turnOff = false;
-//	setWindowState(Qt::WindowFullScreen);
 
-    m_contentList = new FileDownload(this);
-    m_imageFile = new FileDownload(this);
+    m_download = new FileDownload(this);
     m_fileManager = new FileManagement();
 
 	m_nextImageTimer = new QTimer(this);
@@ -37,12 +35,9 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
 
 	connect(m_nextImageTimer, SIGNAL(timeout()), this, SLOT(displayNextImage()));
 	connect(m_getNewContentListTimer, SIGNAL(timeout()), this, SLOT(downloadContentList()));
-    connect(m_contentList, SIGNAL(downloadFinished()), this, SLOT(downloadContentListComplete()));
-    connect(m_contentList, SIGNAL(downloadError(QNetworkReply::NetworkError)), this, SLOT(downloadContentListFailed(QNetworkReply::NetworkError)));
-    connect(m_imageFile, SIGNAL(downloadFinished()), this, SLOT(fileDownloadComplete()));
-    connect(m_imageFile, SIGNAL(downloadError(QNetworkReply::NetworkError)), this, SLOT(downloadFileFailed(QNetworkReply::NetworkError)));
-    
-    downloadContentList();
+    connect(m_download, SIGNAL(downloadFinished()), this, SLOT(fileDownloadComplete()), Qt::QueuedConnection);
+    connect(m_download, SIGNAL(contentListFinished()), this, SLOT(downloadContentListComplete()), Qt::QueuedConnection);
+    connect(m_download, SIGNAL(downloadError(QNetworkReply::NetworkError)), this, SLOT(downloadFileFailed(QNetworkReply::NetworkError)));
 }
 
 PictureFrame::~PictureFrame()
@@ -53,7 +48,7 @@ void PictureFrame::downloadContentList()
 {
 	qWarning() << __FUNCTION__ << ": Getting" << m_contentFileURL << "from server";
 	m_fileInProgress = m_contentFileURL.fileName();
-	m_contentList->getFile(m_contentFileURL);
+	m_download->getFile(m_contentFileURL);
 }
 
 void PictureFrame::downloadContentListFailed(QNetworkReply::NetworkError error)
@@ -64,7 +59,6 @@ void PictureFrame::downloadContentListFailed(QNetworkReply::NetworkError error)
 void PictureFrame::downloadFileFailed(QNetworkReply::NetworkError error)
 {
 	qWarning() << __FUNCTION__ << ": failed to download" << m_urlInProgress.toDisplayString() << ":" << error;
-    m_downloadMutex.unlock();
 }
 
 void PictureFrame::fileDownloadComplete()
@@ -77,12 +71,11 @@ void PictureFrame::fileDownloadComplete()
     qDebug() << __PRETTY_FUNCTION__ << ": got data for" << m_fileInProgress;
 	if (f.open(QIODevice::WriteOnly)) {
 		QDataStream out(&f);
-        QByteArray data = m_imageFile->getFileContents();
+        QByteArray data = m_download->getFileContents();
 		out.writeRawData(data.data(), data.size());
 		f.close();
 	}
 	m_fileInProgress.clear();
-    m_downloadMutex.unlock();
 }
 
 void PictureFrame::deleteRemovedFiles(QStringList &deleteList)
@@ -117,17 +110,15 @@ void PictureFrame::getNewFiles(QMap<QString,QString> imageList)
 	QMapIterator<QString,QString> it(imageList);
 
     while (it.hasNext()) {
-        m_downloadMutex.lock();
         it.next();
         if (!m_fileManager->fileExists(it.key())) {
-        qDebug() << __PRETTY_FUNCTION__ << ": getting file" << it.key();
-            m_imageFile->getFile(QUrl(it.value()));
+            qDebug() << __PRETTY_FUNCTION__ << ": getting file" << it.key();
+            m_download->getFile(QUrl(it.value()));
             m_fileInProgress = it.key();
             m_urlInProgress = QUrl(it.value());
         }
         else {
             qDebug() << __PRETTY_FUNCTION__ << ": file exists, move along";
-            m_downloadMutex.unlock();
         }
     }
 }
@@ -136,7 +127,7 @@ void PictureFrame::downloadContentListComplete()
 {
     QMap<QString,QString> imageList;
     QStringList deleteList;
-	QXmlStreamReader doc(m_contentList->getFileContents());
+	QXmlStreamReader doc(m_download->getFileContents());
 
     m_nextImageTimer->stop();
     
@@ -167,6 +158,7 @@ void PictureFrame::downloadContentListComplete()
         }
 	}
 	m_getNewContentListTimer->start(PF_ONE_HOUR);
+    show();
     displayNextImage();
 }
 

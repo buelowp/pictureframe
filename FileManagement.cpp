@@ -51,7 +51,7 @@ int FileManagement::updateLocalFileList()
         QDir pImagePath;
 
         if (path.size()) {
-            qWarning() << __FUNCTION__ << ": " << fileSetting << ": checking" << path;
+            qDebug() << __FUNCTION__ << ": " << fileSetting << ": checking" << path;
             if (!pImagePath.cd(path))
                 validPaths = false;
         }
@@ -67,7 +67,7 @@ int FileManagement::updateLocalFileList()
         else
             currList.append(pImagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed));
 
-        qWarning() << __FUNCTION__ << ": File list size is" << currList.size() << "in path" << path;
+        qDebug() << __FUNCTION__ << ": File list size is" << currList.size() << "in path" << path;
 
         for (int i = 0; i < currList.size(); i++) {
             QString fn = currList.at(i);
