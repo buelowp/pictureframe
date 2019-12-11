@@ -25,8 +25,9 @@ int main(int argc, char *argv[])
 	display.setStyleSheet("QMainWindow {background: 'black';}");
 	app.setOverrideCursor(QCursor(Qt::BlankCursor));
 	display.setFixedSize(QSize(width, height));
+	display.showFullScreen();
     display.downloadContentList();
-//	display.show();
+	display.show();
 
    	return app.exec();
 }
