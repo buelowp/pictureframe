@@ -10,8 +10,6 @@
 FileDownload::FileDownload(QObject *parent) : QObject(parent)
 {
     m_WebCtrl = new QNetworkAccessManager(this);
-    m_reply = nullptr;
-    m_isContentList = false;
     
 	connect(m_WebCtrl, SIGNAL(finished(QNetworkReply*)), this, SLOT(fileDownloaded(QNetworkReply*)));
 	connect(m_WebCtrl, SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError>&)), this, SLOT(sslError(QNetworkReply*, const QList<QSslError>&)));
@@ -25,6 +23,7 @@ FileDownload::FileDownload(QObject *parent) : QObject(parent)
 
 FileDownload::~FileDownload()
 {
+    m_WebCtrl->deleteLater();
 }
 
 void FileDownload::authenticationRequired(QNetworkReply*, QAuthenticator*)
@@ -60,54 +59,34 @@ void FileDownload::sslError(QNetworkReply *reply, const QList<QSslError>&)
 
 void FileDownload::downloadProgress(qint64 rcvd, qint64 total)
 {
-    qDebug() << __PRETTY_FUNCTION__ << "Got" << rcvd << "bytes, total received is" << total;
-}
-
-void FileDownload::getFile(QUrl imageUrl)
-{
-    QString p;
-    
-	qWarning() << __PRETTY_FUNCTION__ << ": Getting" << imageUrl;
-	m_reply = m_WebCtrl->get(QNetworkRequest(imageUrl));
-    
-    if (imageUrl.fileName() == "contentlist.xml")
-        m_isContentList = true;
-    else
-        m_isContentList = false;
-    
-    qDebug() << __PRETTY_FUNCTION__ << "m_reply" << p.sprintf("%08p", m_reply);
+    auto file = m_toDownload.begin();
+    if (file != m_toDownload.end()) {
+        qDebug() << __PRETTY_FUNCTION__ << "Got" << rcvd << "bytes for" << file.key() <<", total received is" << total;
+        emit progress(file.key(), rcvd, total);
+    }
 }
 
 void FileDownload::fileDownloaded(QNetworkReply* pReply)
 {
-	if (pReply->error() == QNetworkReply::NoError) {
-		m_DownloadedData = pReply->readAll();
-        if (m_isContentList) {
-            qDebug() << __PRETTY_FUNCTION__ << ": Got contentlist, emitting download complete signal";
-            emit contentListFinished();
-        }
-        else {
-            qDebug() << __PRETTY_FUNCTION__ << ": Got image, emitting download complete signal";
-            emit downloadFinished();
-        }
-	}
-	else {
-		qDebug() << __PRETTY_FUNCTION__ << "Got an error reply";
-		emit downloadError(pReply->error());
-	}
-	qDebug() << __PRETTY_FUNCTION__ << ": content size is" << m_DownloadedData.size();
-	pReply->deleteLater();
-    if (pReply == m_reply)
-        qDebug() << __PRETTY_FUNCTION__ << ": slot reply and stored reply match";
-    else
-        qDebug() << __PRETTY_FUNCTION__ << ": slot reply and stored reply do not match";
+    QByteArray data;
+    auto file = m_toDownload.begin();
     
-    qDebug() << __PRETTY_FUNCTION__;
-}
-
-QByteArray FileDownload::getFileContents()
-{
-	return m_DownloadedData;
+    if (file == m_toDownload.end()) {
+        qDebug() << __FUNCTION__ << ": Odd, we got a download done, but there is nothing in the queue";
+        pReply->deleteLater();
+        return;
+    }
+	if (pReply->error() == QNetworkReply::NoError) {
+		data = pReply->readAll();
+        emit downloadFinished(file.key(), data);
+    }
+    else {
+        qDebug() << __FUNCTION__ << ": Error downloading" << file.key();
+        emit downloadError(file.key());
+    }
+    pReply->deleteLater();
+    m_toDownload.remove(file.key());
+    startDownload();
 }
 
 void FileDownload::encrypted()
@@ -116,11 +95,6 @@ void FileDownload::encrypted()
 }
 
 void FileDownload::replyError(QNetworkReply::NetworkError)
-{
-    qDebug() << __PRETTY_FUNCTION__;
-}
-
-void FileDownload::finished()
 {
     qDebug() << __PRETTY_FUNCTION__;
 }
@@ -150,3 +124,36 @@ void FileDownload::sslErrors(const QList<QSslError>&)
     qDebug() << __PRETTY_FUNCTION__;
 }
 
+void FileDownload::addToDownloadList(QUrl url)
+{
+    qDebug() << __FUNCTION__ << ": Adding" << url << "to download list";
+    m_toDownload[url.fileName()] = url;
+    startDownload();
+}
+
+void FileDownload::addToDownloadList(QSet<QString> names, QMap<QString, QUrl> urls)
+{
+    QSetIterator<QString> i(names);
+    while (i.hasNext()) {
+        auto key = urls.find(i.next());
+        if (key != urls.end()) {
+            m_toDownload[key.key()] = key.value();
+            qDebug() << __FUNCTION__ << ": Adding" << key.value() << "to download list";
+        }
+    }
+    startDownload();
+}
+
+void FileDownload::startDownload()
+{
+    auto first = m_toDownload.begin();
+    
+    if (first != m_toDownload.end()) {
+        qDebug() << __FUNCTION__ << ": Downloading" << first.value();
+        m_WebCtrl->get(QNetworkRequest(first.value()));
+        emit downloading(first.key());
+    }
+    else {
+        emit downloadsFinished();
+    }
+}

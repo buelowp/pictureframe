@@ -24,6 +24,7 @@ public:
 	int getImages(const QUrl);
 
 public slots:
+    void startDownload();
     void downloadFinished(QNetworkReply *reply);
     void sslErrors(const QList<QSslError> &errors);
 
