@@ -12,12 +12,14 @@ SOURCES += main.cpp\
         PictureFrame.cpp \
         FileManagement.cpp  \
         FileDownload.cpp \
-        images.cpp
+        images.cpp \
+        progressdialog.cpp
 
 HEADERS  += PictureFrame.h \
 	FileManagement.h  \
 	FileDownload.h \
-	images.h
+	images.h \
+	progressdialog.h
 
 target.path = /usr/local/bin
 INSTALLS += target

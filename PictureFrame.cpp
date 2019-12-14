@@ -19,12 +19,9 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
     
     m_images = new Images();
     m_files = new FileManagement();
-    m_progressLabel = new QLabel();
-    m_progress = new QProgressDialog(this);
+    m_progress = new ProgressDialog();
     m_progress->hide();
-    m_progressLabel->hide();
-    m_progress->setMinimumDuration(50);
-    m_progress->setWindowModality(Qt::WindowModal);
+    m_progress->setGeometry(150, 150, 600, 200);
     
     if (m_turnOff) {
         m_offTime = QTime::fromString(settings.value("OffTime", "17:00").toString(), "h:mm");
@@ -45,8 +42,8 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
     connect(m_images, SIGNAL(newFileMap(QMap<QString, QUrl>)), this, SLOT(newFileMap(QMap<QString, QUrl>)));
     connect(m_images, SIGNAL(downloadComplete(QString, QByteArray)), this, SLOT(downloadComplete(QString, QByteArray)));
     connect(m_images, SIGNAL(allDownloadsComplete()), this, SLOT(downloadsComplete()));
-    connect(m_images, SIGNAL(downloadProgress(QString file, qint64 percent, qint64 size)), SLOT(downloadProgress(QString file, qint64 percent, qint64 size)));
-    connect(m_images, SIGNAL(downloadStarted(QString file)), this, SLOT(downloadStarted(QString file)));
+    connect(m_images, SIGNAL(downloadProgress(QString, qint64, qint64)), SLOT(downloadProgress(QString, qint64, qint64)));
+    connect(m_images, SIGNAL(downloadStarted(QString)), this, SLOT(downloadStarted(QString)));
 }
 
 PictureFrame::~PictureFrame()
@@ -57,17 +54,13 @@ void PictureFrame::downloadProgress(QString file, qint64 percent, qint64 size)
 {
     Q_UNUSED(file);
 
-    m_progress->setMaximum(size);
-    m_progress->setValue(percent);
+    m_progress->setProgress(percent, size);
 }
 
 void PictureFrame::downloadStarted(QString file)
 {
     qDebug() << __FUNCTION__ << ": Started download for" << file;
-    m_progressLabel->setText("Downloading " + file);
-    m_progress->setLabel(m_progressLabel);
-    m_progress->setMinimum(0);
-    m_progress->setValue(0);
+    m_progress->setTitle(file);
     m_progress->show();
 }
 
@@ -98,13 +91,12 @@ void PictureFrame::downloadContentList()
 void PictureFrame::newFileMap(QMap<QString, QUrl> filelist)
 {
     QSet<QString> dlist = filelist.keys().toSet();
-    QSet<QString> flist  = m_files->localFiles().toSet();
+    QSet<QString> flist  = m_files->fileNameList().toSet();
     
-    qDebug() << __FUNCTION__ << ": Local files set size" << flist.size() << ", download candidate set size" << dlist.size();
     QSet<QString> toDownload = dlist.subtract(flist);
+    dlist = filelist.keys().toSet();
     QSet<QString> toDelete = flist.subtract(dlist);
     
-    qDebug() << __FUNCTION__ << ": Creating download list";
     m_images->addToDownloadList(toDownload, filelist);
     m_files->setDeleteList(toDelete);
 }

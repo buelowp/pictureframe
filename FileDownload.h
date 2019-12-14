@@ -55,6 +55,7 @@ private:
 	QNetworkAccessManager *m_WebCtrl;
 	QByteArray m_DownloadedData;
     QMap<QString, QUrl> m_toDownload;
+    QNetworkReply *m_reply;
 };
 
 #endif /* FILEDOWNLOAD_H_ */

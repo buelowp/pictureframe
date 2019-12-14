@@ -61,7 +61,6 @@ void FileDownload::downloadProgress(qint64 rcvd, qint64 total)
 {
     auto file = m_toDownload.begin();
     if (file != m_toDownload.end()) {
-        qDebug() << __PRETTY_FUNCTION__ << "Got" << rcvd << "bytes for" << file.key() <<", total received is" << total;
         emit progress(file.key(), rcvd, total);
     }
 }
@@ -73,6 +72,7 @@ void FileDownload::fileDownloaded(QNetworkReply* pReply)
     
     if (file == m_toDownload.end()) {
         qDebug() << __FUNCTION__ << ": Odd, we got a download done, but there is nothing in the queue";
+        disconnect(m_reply, SIGNAL(downloadProgress(qint64, qint64)));
         pReply->deleteLater();
         return;
     }
@@ -84,6 +84,7 @@ void FileDownload::fileDownloaded(QNetworkReply* pReply)
         qDebug() << __FUNCTION__ << ": Error downloading" << file.key();
         emit downloadError(file.key());
     }
+    disconnect(m_reply, SIGNAL(downloadProgress(qint64, qint64)));
     pReply->deleteLater();
     m_toDownload.remove(file.key());
     startDownload();
@@ -150,10 +151,12 @@ void FileDownload::startDownload()
     
     if (first != m_toDownload.end()) {
         qDebug() << __FUNCTION__ << ": Downloading" << first.value();
-        m_WebCtrl->get(QNetworkRequest(first.value()));
+        m_reply = m_WebCtrl->get(QNetworkRequest(first.value()));
+        connect(m_reply, SIGNAL(downloadProgress(qint64, qint64)), this, SLOT(downloadProgress(qint64, qint64)));
         emit downloading(first.key());
     }
     else {
         emit downloadsFinished();
     }
 }
+

@@ -39,7 +39,7 @@ Images::Images(QObject* parent) : QObject(parent)
     connect(m_fileDownloads, SIGNAL(downloadError(QString)), this, SLOT(fileDownloadError(QString)));
     connect(m_fileDownloads, SIGNAL(progress(QString, qint64, qint64)), this, SLOT(progress(QString, qint64, qint64)));
     connect(m_fileDownloads, SIGNAL(downloadsFinished()), this, SLOT(downloadsFinished()));
-    connect(m_fileDownloads, SIGNAL(downloading(QString file)), this, SLOT(newDownloadStarted(QString file)));
+    connect(m_fileDownloads, SIGNAL(downloading(QString)), this, SLOT(newDownloadStarted(QString)));
 }
 
 void Images::downloadsFinished()
@@ -120,6 +120,7 @@ void Images::contentListDownloadError()
 
 void Images::newDownloadStarted(QString file)
 {
+    qDebug() << __FUNCTION__ << file;
     emit downloadStarted(file);
 }
 

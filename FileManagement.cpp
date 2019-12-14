@@ -149,3 +149,14 @@ bool FileManagement::fileExists(QString fn)
     }
     return false;
 }
+
+QStringList FileManagement::fileNameList()
+{
+    QStringList shortlist;
+    
+    for (int i = 0; i < m_localFiles.size(); i++) {
+        QFileInfo fi(m_localFiles.at(i));
+        shortlist.append(fi.fileName());
+    }
+    return shortlist;
+}

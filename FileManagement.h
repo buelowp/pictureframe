@@ -28,8 +28,8 @@ public:
 	bool nextFileInList(QString&);
 	int updateLocalFileList();
     bool fileExists(QString);
-    bool newContentAvailable(QList<QString> downloadlist);
     QStringList localFiles() { return m_localFiles; }
+    QStringList fileNameList();
 
 private:
     void deleteFile(const QString file);

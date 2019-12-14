@@ -16,6 +16,7 @@
 #include "images.h"
 #include "FileManagement.h"
 #include "FileDownload.h"
+#include "progressdialog.h"
 
 #define PF_ONE_HOUR     (1000 * 60 * 60)
 
@@ -44,8 +45,7 @@ protected:
 	void showEvent(QShowEvent*);
 
 private:
-    QProgressDialog *m_progress;
-    QLabel *m_progressLabel;
+    ProgressDialog *m_progress;
 	QTimer *m_nextImageTimer;
     QTimer *m_getNewContentListTimer;
 	int m_ImageTimeout;
