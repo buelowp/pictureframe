@@ -17,14 +17,44 @@ FileManagement::FileManagement()
 	QString randTest = settings.value("Random").toString();
 	m_isRandom = settings.value("Random").toBool();
 	m_orderBy = settings.value("OrderBy").toString();
+    m_path = settings.value("ImagePath").toString();
 
     m_fileIndex = 0;
-    m_localFiles.clear();
-    updateLocalFileList();
 }
 
 FileManagement::~FileManagement()
 {
+}
+
+void FileManagement::saveFile(QString file, QByteArray data)
+{
+    QString path = m_path + "/" + file;
+    QFile destination(path);
+    
+    if (destination.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        destination.write(data);
+    }
+    else {
+        qWarning() << __FUNCTION__ << ": Unable to open" << file;
+    }
+}
+
+void FileManagement::setDeleteList(QSet<QString> list)
+{
+    m_deleteList = list;
+    QSetIterator<QString> i(m_deleteList);
+    while (i.hasNext()) {
+        qDebug() << __FUNCTION__ << ":" << i.next();
+    }
+}
+
+void FileManagement::cleanup()
+{
+    QSetIterator<QString> i(m_deleteList);
+    while (i.hasNext()) {
+        qDebug() << __FUNCTION__ << ": Deleting" << i.peekNext();
+        deleteFile(i.next());
+    }
 }
 
 /**
@@ -34,44 +64,35 @@ FileManagement::~FileManagement()
  */
 int FileManagement::updateLocalFileList()
 {
-	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
-    bool validPaths = true;
-    int pathIndex = 1;
     QStringList nameFilters;
+    QStringList currList;
+    qDebug() << __FUNCTION__ << ":" << m_path;
+    QDir imagePath(m_path);
     
     nameFilters << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG" << "*.png" << "*.PNG";
 
-    if (!m_localFiles.isEmpty())
+    cleanup();
+    
+    if (m_localFiles.size())
         m_localFiles.clear();
 
-    while (validPaths) {
-        QString fileSetting = QString("ImagePath%1").arg(pathIndex++);
-        QStringList currList;
-        QString path = settings.value(fileSetting).toString();
-        QDir pImagePath;
-
-        if (path.size()) {
-            qDebug() << __FUNCTION__ << ": " << fileSetting << ": checking" << path;
-            if (!pImagePath.cd(path))
-                validPaths = false;
-        }
-        else
-            validPaths = false;
-
+    if (imagePath.exists()) {
+        imagePath.setNameFilters(nameFilters);
+        
         if (m_orderBy.compare("Name"), Qt::CaseInsensitive) 
-            currList.append(pImagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Name));
+            currList = imagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Name);
         else if (m_orderBy.compare("Time"), Qt::CaseInsensitive)
-            currList.append(pImagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed));
+            currList = imagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed);
         else if (m_orderBy.compare("None"), Qt::CaseInsensitive)
-            currList.append(pImagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::NoSort));
+            currList = imagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::NoSort);
         else
-            currList.append(pImagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed));
+            currList = imagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Time|QDir::Reversed);
 
-        qDebug() << __FUNCTION__ << ": File list size is" << currList.size() << "in path" << path;
+        qDebug() << __FUNCTION__ << ": File list size is" << currList.size() << "in path" << m_path;
 
         for (int i = 0; i < currList.size(); i++) {
             QString fn = currList.at(i);
-            m_localFiles.append(pImagePath.absoluteFilePath(fn));
+            m_localFiles.append(imagePath.absoluteFilePath(fn));
         }
     }
 
@@ -79,6 +100,7 @@ int FileManagement::updateLocalFileList()
 		std::random_shuffle(m_localFiles.begin(), m_localFiles.end());
 	}
 
+	m_fileIndex = 0;
 	return m_localFiles.size();
 }
 
@@ -97,17 +119,16 @@ bool FileManagement::nextFileInList(QString &fn)
     if (m_fileIndex >= m_localFiles.size())
         m_fileIndex = 0;
 
-    qDebug() << __PRETTY_FUNCTION__ << ": index:" << m_fileIndex << ", file list size:" << m_localFiles.size();
     fn = m_localFiles.at(m_fileIndex++);
     return true;
 }
 
-bool FileManagement::deleteFile(QString &fn)
+void FileManagement::deleteFile(const QString file)
 {
-    if (QFile::exists(fn))
-        return QFile::remove(fn);
-
-    return true;
+    QString path = m_path + "/" + file;
+    
+    if (QFile::exists(path))
+        QFile::remove(path);
 }
 
 bool FileManagement::fileExists(QString fn)
@@ -127,4 +148,15 @@ bool FileManagement::fileExists(QString fn)
         }
     }
     return false;
+}
+
+QStringList FileManagement::fileNameList()
+{
+    QStringList shortlist;
+    
+    for (int i = 0; i < m_localFiles.size(); i++) {
+        QFileInfo fi(m_localFiles.at(i));
+        shortlist.append(fi.fileName());
+    }
+    return shortlist;
 }

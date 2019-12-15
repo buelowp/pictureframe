@@ -15,18 +15,24 @@
  * \class FileDownload
  * Provides a Qt download class to get image and content files from the server
  */
-class FileDownload : public QObject {
+class FileDownload : public QObject 
+{
 	Q_OBJECT
 public:
-	FileDownload(QObject *parent = 0);
+	FileDownload(QObject *parent = nullptr);
 	virtual ~FileDownload();
-	QByteArray getFileContents();
-	void getFile(QUrl imageUrl);
+
+	void addToDownloadList(QUrl url);
+    void addToDownloadList(QSet<QString> names, QMap<QString, QUrl> urls);
+    void startDownload();
 
 signals:
-	void downloadFinished();
-    void contentListFinished();
-	void downloadError(QNetworkReply::NetworkError);
+    void contentListComplete(QByteArray data);
+	void downloadFinished(QString file, QByteArray data);
+	void downloadError(QString file);
+    void progress(QString file, qint64 percent, qint64 total);
+    void downloadsFinished();
+    void downloading(QString file);
 
 public slots:
 	void fileDownloaded(QNetworkReply*);
@@ -39,7 +45,6 @@ public slots:
     void downloadProgress(qint64, qint64);
     void encrypted();
     void replyError(QNetworkReply::NetworkError);
-    void finished();
     void metaDataChanged();
     void preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator*);
     void redirectAllowed();
@@ -48,9 +53,9 @@ public slots:
     
 private:
 	QNetworkAccessManager *m_WebCtrl;
-    QNetworkReply *m_reply;
 	QByteArray m_DownloadedData;
-    bool m_isContentList;
+    QMap<QString, QUrl> m_toDownload;
+    QNetworkReply *m_reply;
 };
 
 #endif /* FILEDOWNLOAD_H_ */

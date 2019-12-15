@@ -15,7 +15,13 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
 	m_ImageTimeout = settings.value("ImageTimeout", 5000).toInt();
 	m_NetTimeout = settings.value("NetworkTimeout", 60000).toInt();
     m_turnOff = settings.value("TurnOff", false).toBool();
-    m_contentFileURL.setUrl(settings.value("URL").toString());
+    m_contentListURL = settings.value("URL").toString();
+    
+    m_images = new Images();
+    m_files = new FileManagement();
+    m_progress = new ProgressDialog();
+    m_progress->hide();
+    m_progress->setGeometry(150, 150, 600, 200);
     
     if (m_turnOff) {
         m_offTime = QTime::fromString(settings.value("OffTime", "17:00").toString(), "h:mm");
@@ -27,144 +33,84 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
 
     m_turnOff = false;
 
-    m_download = new FileDownload(this);
-    m_fileManager = new FileManagement();
-
 	m_nextImageTimer = new QTimer(this);
     m_getNewContentListTimer = new QTimer(this);
 
 	connect(m_nextImageTimer, SIGNAL(timeout()), this, SLOT(displayNextImage()));
 	connect(m_getNewContentListTimer, SIGNAL(timeout()), this, SLOT(downloadContentList()));
-    connect(m_download, SIGNAL(downloadFinished()), this, SLOT(fileDownloadComplete()), Qt::QueuedConnection);
-    connect(m_download, SIGNAL(contentListFinished()), this, SLOT(downloadContentListComplete()), Qt::QueuedConnection);
-    connect(m_download, SIGNAL(downloadError(QNetworkReply::NetworkError)), this, SLOT(downloadFileFailed(QNetworkReply::NetworkError)));
+    connect(m_images, SIGNAL(contentListError()), this, SLOT(contentListFailed()));
+    connect(m_images, SIGNAL(newFileMap(QMap<QString, QUrl>)), this, SLOT(newFileMap(QMap<QString, QUrl>)));
+    connect(m_images, SIGNAL(downloadComplete(QString, QByteArray)), this, SLOT(downloadComplete(QString, QByteArray)));
+    connect(m_images, SIGNAL(allDownloadsComplete()), this, SLOT(downloadsComplete()));
+    connect(m_images, SIGNAL(downloadProgress(QString, qint64, qint64)), SLOT(downloadProgress(QString, qint64, qint64)));
+    connect(m_images, SIGNAL(downloadStarted(QString)), this, SLOT(downloadStarted(QString)));
 }
 
 PictureFrame::~PictureFrame()
 {
 }
 
+void PictureFrame::downloadProgress(QString file, qint64 percent, qint64 size)
+{
+    Q_UNUSED(file);
+
+    m_progress->setProgress(percent, size);
+}
+
+void PictureFrame::downloadStarted(QString file)
+{
+    m_progress->setTitle(file);
+    m_progress->show();
+}
+
+void PictureFrame::downloadComplete(QString file, QByteArray data)
+{
+    m_files->saveFile(file, data);
+}
+
+void PictureFrame::downloadsComplete()
+{
+    m_progress->hide();
+    m_files->updateLocalFileList();
+    displayNextImage();
+}
+
+void PictureFrame::contentListFailed()
+{
+    qDebug() << __FUNCTION__ << ": Didn't get a content list this time";
+}
+
 void PictureFrame::downloadContentList()
 {
-	qWarning() << __FUNCTION__ << ": Getting" << m_contentFileURL << "from server";
-	m_fileInProgress = m_contentFileURL.fileName();
-	m_download->getFile(m_contentFileURL);
+    m_files->updateLocalFileList();
+    m_images->addToDownloadList(m_contentListURL);    
 }
 
-void PictureFrame::downloadContentListFailed(QNetworkReply::NetworkError error)
+void PictureFrame::newFileMap(QMap<QString, QUrl> filelist)
 {
-	qWarning() << __FUNCTION__ << ": ContentList download failed: " << error;
-}
-
-void PictureFrame::downloadFileFailed(QNetworkReply::NetworkError error)
-{
-	qWarning() << __FUNCTION__ << ": failed to download" << m_urlInProgress.toDisplayString() << ":" << error;
-}
-
-void PictureFrame::fileDownloadComplete()
-{
-	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
-	QString path = settings.value("ImagePath1").toString();
-	QString dlLocation = path + "/" + m_fileInProgress;
-	QFile f(dlLocation);
-
-    qDebug() << __PRETTY_FUNCTION__ << ": got data for" << m_fileInProgress;
-	if (f.open(QIODevice::WriteOnly)) {
-		QDataStream out(&f);
-        QByteArray data = m_download->getFileContents();
-		out.writeRawData(data.data(), data.size());
-		f.close();
-	}
-	m_fileInProgress.clear();
-}
-
-void PictureFrame::deleteRemovedFiles(QStringList &deleteList)
-{
-	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
-	QString path = settings.value("ImagePath1").toString();
-	QDir pImagePath(path);;
-	QStringList files = pImagePath.entryList(QDir::Files|QDir::NoDotAndDotDot, QDir::Name);
-	QSet<QString> fromLocal = QSet<QString>::fromList(files);
-	QSet<QString> fromServer = QSet<QString>::fromList(deleteList);
-
-	qWarning() << __FUNCTION__ << ": there are" << files.size() << "local files";
-	qWarning() << __FUNCTION__ << ": there are" << deleteList.size() << "files in the delete list";
-	fromLocal.subtract(fromServer);
-	qWarning() << __FUNCTION__ << ": The list of files to delete has" << fromLocal.size() << "entries";
-	QSetIterator<QString> toDel(fromLocal);
-	while (toDel.hasNext()) {
-		QString file = pImagePath.absolutePath() + "/" + toDel.next();
-		qWarning() << __FUNCTION__ << ": Deleting" << file;
-		QFile f(file);
-		f.remove();
-	}
-}
-
-/**
- * \fn void PictureFrame::getNewFiles(QMap<QString,QString> imageList)
- * \param imageList QMap of strings with key of filename, and value of file URL
- * \brief cycle through map to download all files that don't exist yet
- */
-void PictureFrame::getNewFiles(QMap<QString,QString> imageList)
-{
-	QMapIterator<QString,QString> it(imageList);
-
-    while (it.hasNext()) {
-        it.next();
-        if (!m_fileManager->fileExists(it.key())) {
-            qDebug() << __PRETTY_FUNCTION__ << ": getting file" << it.key();
-            m_download->getFile(QUrl(it.value()));
-            m_fileInProgress = it.key();
-            m_urlInProgress = QUrl(it.value());
-        }
-        else {
-            qDebug() << __PRETTY_FUNCTION__ << ": file exists, move along";
-        }
-    }
-}
-
-void PictureFrame::downloadContentListComplete()
-{
-    QMap<QString,QString> imageList;
-    QStringList deleteList;
-	QXmlStreamReader doc(m_download->getFileContents());
-
-    m_nextImageTimer->stop();
+    QSet<QString> dlist = filelist.keys().toSet();
+    QSet<QString> flist  = m_files->fileNameList().toSet();
     
-	if (doc.hasError()) {
-		qWarning() << __FUNCTION__ << ": Downloaded xml has errors";
-		return;
-	}
-	else {
-		while (!doc.atEnd() && !doc.hasError()) {
-			QXmlStreamReader::TokenType token = doc.readNext();
-			if (token == QXmlStreamReader::StartDocument)
-				continue;
+    QSet<QString> toDownload = dlist.subtract(flist);
+    dlist = filelist.keys().toSet();
+    QSet<QString> toDelete = flist.subtract(dlist);
+    
+    m_images->addToDownloadList(toDownload, filelist);
+    m_files->setDeleteList(toDelete);
+}
 
-			if (token == QXmlStreamReader::StartElement) {
-				if (doc.name() == "Url") {
-					QUrl url(doc.readElementText());
-					if (url.isValid()) {
-						imageList[url.fileName()] = url.toDisplayString();
-                        deleteList << url.fileName();
-					}
-				}
-			}
-		}
-        m_fileManager->updateLocalFileList();
-		if (!imageList.empty()) {
-            getNewFiles(imageList);
-            deleteRemovedFiles(deleteList);
-        }
-	}
-	m_getNewContentListTimer->start(PF_ONE_HOUR);
-    show();
-    displayNextImage();
+void PictureFrame::downloadFileFailed(QString file)
+{
+	qWarning() << __FUNCTION__ << ": failed to download" << file;
 }
 
 void PictureFrame::showEvent(QShowEvent*)
 {
 	qDebug() << __FUNCTION__ << ": width:" << width() << ", height:" << height();
+    
+    downloadContentList();
+    m_getNewContentListTimer->start(PF_ONE_HOUR);
+    
     m_image->resize(width(), height());
 	displayNextImage();
 }
@@ -173,13 +119,15 @@ void PictureFrame::displayNextImage()
 {
 	QString image;
 
+    if (m_nextImageTimer->isActive())
+        m_nextImageTimer->stop();
+    
     while (true) {
-        if (m_fileManager->nextFileInList(image)) {
+        if (m_files->nextFileInList(image)) {
             QPixmap pm(image);
             if (pm.isNull())
                 continue;
 
-            qDebug() << __FUNCTION__ << ": showing" << image << "at" << width() << ":" << height();
             if (pm.width() > pm.height())
                 m_image->setPixmap(pm.scaledToWidth(width()));
             else

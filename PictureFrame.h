@@ -13,8 +13,10 @@
 #include <QtCore/QtCore>
 #include <QtXml/QtXml>
 
+#include "images.h"
 #include "FileManagement.h"
 #include "FileDownload.h"
+#include "progressdialog.h"
 
 #define PF_ONE_HOUR     (1000 * 60 * 60)
 
@@ -28,29 +30,22 @@ public:
 	PictureFrame(QWidget *parent = 0);
 	virtual ~PictureFrame();
 
-	void menu();
-	bool validateOptions();
-	void getNewContent();
-	void getNewFiles(QMap<QString,QString>);
-	void deleteRemovedFiles(QStringList&);
-
 public slots:
-	void fileDownloadComplete();
-	void downloadContentListComplete();
-	void downloadContentListFailed(QNetworkReply::NetworkError);
-	void downloadFileFailed(QNetworkReply::NetworkError);
+    void newFileMap(QMap<QString, QUrl> filelist);
+	void downloadFileFailed(QString);
 	void downloadContentList();
 	void displayNextImage();
-
-signals:
-	void fileDownloadsComplete();
+    void contentListFailed();
+    void downloadComplete(QString file, QByteArray data);
+    void downloadsComplete();
+    void downloadStarted(QString file);
+    void downloadProgress(QString file, qint64 percent, qint64 size);
 
 protected:
 	void showEvent(QShowEvent*);
 
 private:
-	void downloadFile();
-
+    ProgressDialog *m_progress;
 	QTimer *m_nextImageTimer;
     QTimer *m_getNewContentListTimer;
 	int m_ImageTimeout;
@@ -59,13 +54,11 @@ private:
 	QLabel *m_image;
     QTime m_offTime;
     QTime m_onTime;
-    QUrl m_contentFileURL;
-    QUrl m_urlInProgress;
     QString m_fileInProgress;
     QMutex m_downloadMutex;
-
-	FileManagement *m_fileManager;
-    FileDownload *m_download;
+    QUrl m_contentListURL;
+    FileManagement *m_files;
+    Images *m_images;
 };
 
 #endif /* IMAGEPROCESSING_H_ */
