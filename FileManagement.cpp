@@ -19,7 +19,6 @@ FileManagement::FileManagement()
 	m_orderBy = settings.value("OrderBy").toString();
     m_path = settings.value("ImagePath").toString();
 
-    qDebug() << __FUNCTION__ << ": Path" << m_path << "," << m_orderBy << "," << m_isRandom;
     m_fileIndex = 0;
 }
 
@@ -32,7 +31,6 @@ void FileManagement::saveFile(QString file, QByteArray data)
     QString path = m_path + "/" + file;
     QFile destination(path);
     
-    qDebug() << __FUNCTION__ << ": Writing data to" << file;
     if (destination.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         destination.write(data);
     }
@@ -54,6 +52,7 @@ void FileManagement::cleanup()
 {
     QSetIterator<QString> i(m_deleteList);
     while (i.hasNext()) {
+        qDebug() << __FUNCTION__ << ": Deleting" << i.peekNext();
         deleteFile(i.next());
     }
 }
@@ -72,6 +71,8 @@ int FileManagement::updateLocalFileList()
     
     nameFilters << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG" << "*.png" << "*.PNG";
 
+    cleanup();
+    
     if (m_localFiles.size())
         m_localFiles.clear();
 
@@ -118,7 +119,6 @@ bool FileManagement::nextFileInList(QString &fn)
     if (m_fileIndex >= m_localFiles.size())
         m_fileIndex = 0;
 
-    qDebug() << __PRETTY_FUNCTION__ << ": index:" << m_fileIndex << ", file list size:" << m_localFiles.size();
     fn = m_localFiles.at(m_fileIndex++);
     return true;
 }

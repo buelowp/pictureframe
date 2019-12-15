@@ -120,7 +120,6 @@ void Images::contentListDownloadError()
 
 void Images::newDownloadStarted(QString file)
 {
-    qDebug() << __FUNCTION__ << file;
     emit downloadStarted(file);
 }
 

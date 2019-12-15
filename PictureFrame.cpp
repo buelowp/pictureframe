@@ -59,7 +59,6 @@ void PictureFrame::downloadProgress(QString file, qint64 percent, qint64 size)
 
 void PictureFrame::downloadStarted(QString file)
 {
-    qDebug() << __FUNCTION__ << ": Started download for" << file;
     m_progress->setTitle(file);
     m_progress->show();
 }
@@ -72,7 +71,6 @@ void PictureFrame::downloadComplete(QString file, QByteArray data)
 void PictureFrame::downloadsComplete()
 {
     m_progress->hide();
-    m_files->cleanup();
     m_files->updateLocalFileList();
     displayNextImage();
 }
@@ -130,7 +128,6 @@ void PictureFrame::displayNextImage()
             if (pm.isNull())
                 continue;
 
-            qDebug() << __FUNCTION__ << ": showing" << image << "at" << width() << ":" << height();
             if (pm.width() > pm.height())
                 m_image->setPixmap(pm.scaledToWidth(width()));
             else

@@ -127,7 +127,6 @@ void FileDownload::sslErrors(const QList<QSslError>&)
 
 void FileDownload::addToDownloadList(QUrl url)
 {
-    qDebug() << __FUNCTION__ << ": Adding" << url << "to download list";
     m_toDownload[url.fileName()] = url;
     startDownload();
 }
@@ -139,7 +138,6 @@ void FileDownload::addToDownloadList(QSet<QString> names, QMap<QString, QUrl> ur
         auto key = urls.find(i.next());
         if (key != urls.end()) {
             m_toDownload[key.key()] = key.value();
-            qDebug() << __FUNCTION__ << ": Adding" << key.value() << "to download list";
         }
     }
     startDownload();
