@@ -12,12 +12,13 @@
 #include <QtGui/QtGui>
 #include <QtCore/QtCore>
 #include <QtXml/QtXml>
+#include <QtWidgets/QtWidgets>
+#include <QtMultimediaWidgets/QtMultimediaWidgets>
 
 #include "downloadmanager.h"
 #include "FileManagement.h"
 #include "FileDownload.h"
 #include "progressdialog.h"
-#include "videowidget.h"
 
 #define PF_ONE_HOUR     (1000 * 60 * 60)
 
@@ -41,6 +42,8 @@ public slots:
     void downloadsComplete();
     void downloadStarted(QString file);
     void downloadProgress(QString file, qint64 percent, qint64 size);
+    void videoStateChanged(QMediaPlayer::State state);
+    void videoError(QMediaPlayer::Error error);
 
 protected:
 	void showEvent(QShowEvent*);
@@ -57,6 +60,7 @@ private:
     QString m_fileInProgress;
     QMutex m_downloadMutex;
     QUrl m_contentListURL;
+    QMediaPlayer *m_player;
 
     int m_ImageTimeout;
 	int m_NetTimeout;
@@ -65,7 +69,7 @@ private:
     FileManagement *m_files;
     DownloadManager *m_manager;
     ProgressDialog *m_progress;
-    VideoWidget *m_video;
+    QVideoWidget *m_video;
 };
 
 #endif /* IMAGEPROCESSING_H_ */

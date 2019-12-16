@@ -13,15 +13,13 @@ SOURCES += main.cpp\
         FileManagement.cpp  \
         FileDownload.cpp \
         downloadmanager.cpp \
-        progressdialog.cpp \
-        videowidget.cpp
+        progressdialog.cpp
 
 HEADERS  += PictureFrame.h \
 	FileManagement.h  \
 	FileDownload.h \
 	downloadmanager.h \
-	progressdialog.h \
-	videowidget.h
+	progressdialog.h
 
 target.path = /usr/local/bin
 INSTALLS += target
