@@ -13,10 +13,11 @@
 #include <QtCore/QtCore>
 #include <QtXml/QtXml>
 
-#include "images.h"
+#include "downloadmanager.h"
 #include "FileManagement.h"
 #include "FileDownload.h"
 #include "progressdialog.h"
+#include "videowidget.h"
 
 #define PF_ONE_HOUR     (1000 * 60 * 60)
 
@@ -45,20 +46,26 @@ protected:
 	void showEvent(QShowEvent*);
 
 private:
-    ProgressDialog *m_progress;
+    void displayVideo(QString file);
+    void displayImage(QString file);
+    
 	QTimer *m_nextImageTimer;
     QTimer *m_getNewContentListTimer;
-	int m_ImageTimeout;
-	int m_NetTimeout;
-    bool m_turnOff;
 	QLabel *m_image;
     QTime m_offTime;
     QTime m_onTime;
     QString m_fileInProgress;
     QMutex m_downloadMutex;
     QUrl m_contentListURL;
+
+    int m_ImageTimeout;
+	int m_NetTimeout;
+    bool m_turnOff;
+
     FileManagement *m_files;
-    Images *m_images;
+    DownloadManager *m_manager;
+    ProgressDialog *m_progress;
+    VideoWidget *m_video;
 };
 
 #endif /* IMAGEPROCESSING_H_ */

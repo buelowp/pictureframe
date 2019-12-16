@@ -31,13 +31,13 @@
 
 #include "FileDownload.h"
 
-class Images : public QObject
+class DownloadManager : public QObject
 {
     Q_OBJECT
 
 public:
-    Images(QObject* parent = nullptr);
-    ~Images();
+    DownloadManager(QObject* parent = nullptr);
+    ~DownloadManager();
     
     void addToDownloadList(QSet<QString> index, QMap<QString, QUrl> potentials);
     void addToDownloadList(QUrl url);

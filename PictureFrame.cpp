@@ -17,18 +17,21 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
     m_turnOff = settings.value("TurnOff", false).toBool();
     m_contentListURL = settings.value("URL").toString();
     
-    m_images = new Images();
-    m_files = new FileManagement();
-    m_progress = new ProgressDialog();
-    m_progress->hide();
-    m_progress->setGeometry(150, 150, 600, 200);
-    
     if (m_turnOff) {
         m_offTime = QTime::fromString(settings.value("OffTime", "17:00").toString(), "h:mm");
         m_onTime = QTime::fromString(settings.value("OnTime", "7:00").toString(), "h:mm");
     }
 
+    m_manager = new DownloadManager();
+    m_files = new FileManagement();
+    m_progress = new ProgressDialog();
+    m_video = new VideoWidget(this);
 	m_image = new QLabel(this);
+    
+    m_progress->hide();
+    m_video->hide();
+    m_progress->setGeometry(150, 150, 600, 200);
+    
 	m_image->setAlignment(Qt::AlignCenter);
 
     m_turnOff = false;
@@ -38,12 +41,12 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
 
 	connect(m_nextImageTimer, SIGNAL(timeout()), this, SLOT(displayNextImage()));
 	connect(m_getNewContentListTimer, SIGNAL(timeout()), this, SLOT(downloadContentList()));
-    connect(m_images, SIGNAL(contentListError()), this, SLOT(contentListFailed()));
-    connect(m_images, SIGNAL(newFileMap(QMap<QString, QUrl>)), this, SLOT(newFileMap(QMap<QString, QUrl>)));
-    connect(m_images, SIGNAL(downloadComplete(QString, QByteArray)), this, SLOT(downloadComplete(QString, QByteArray)));
-    connect(m_images, SIGNAL(allDownloadsComplete()), this, SLOT(downloadsComplete()));
-    connect(m_images, SIGNAL(downloadProgress(QString, qint64, qint64)), SLOT(downloadProgress(QString, qint64, qint64)));
-    connect(m_images, SIGNAL(downloadStarted(QString)), this, SLOT(downloadStarted(QString)));
+    connect(m_manager, SIGNAL(contentListError()), this, SLOT(contentListFailed()));
+    connect(m_manager, SIGNAL(newFileMap(QMap<QString, QUrl>)), this, SLOT(newFileMap(QMap<QString, QUrl>)));
+    connect(m_manager, SIGNAL(downloadComplete(QString, QByteArray)), this, SLOT(downloadComplete(QString, QByteArray)));
+    connect(m_manager, SIGNAL(allDownloadsComplete()), this, SLOT(downloadsComplete()));
+    connect(m_manager, SIGNAL(downloadProgress(QString, qint64, qint64)), SLOT(downloadProgress(QString, qint64, qint64)));
+    connect(m_manager, SIGNAL(downloadStarted(QString)), this, SLOT(downloadStarted(QString)));
 }
 
 PictureFrame::~PictureFrame()
@@ -83,7 +86,7 @@ void PictureFrame::contentListFailed()
 void PictureFrame::downloadContentList()
 {
     m_files->updateLocalFileList();
-    m_images->addToDownloadList(m_contentListURL);    
+    m_manager->addToDownloadList(m_contentListURL);    
 }
 
 void PictureFrame::newFileMap(QMap<QString, QUrl> filelist)
@@ -95,7 +98,7 @@ void PictureFrame::newFileMap(QMap<QString, QUrl> filelist)
     dlist = filelist.keys().toSet();
     QSet<QString> toDelete = flist.subtract(dlist);
     
-    m_images->addToDownloadList(toDownload, filelist);
+    m_manager->addToDownloadList(toDownload, filelist);
     m_files->setDeleteList(toDelete);
 }
 
@@ -115,32 +118,43 @@ void PictureFrame::showEvent(QShowEvent*)
 	displayNextImage();
 }
 
+void PictureFrame::displayImage(QString file)
+{
+    QPixmap pm(file);
+    if (!pm.isNull()) {
+        if (pm.width() > pm.height())
+            m_image->setPixmap(pm.scaledToWidth(width()));
+        else
+            m_image->setPixmap(pm.scaledToHeight(height()));
+    }
+
+    m_image->show();
+    m_nextImageTimer->setInterval(m_ImageTimeout);
+    m_nextImageTimer->setSingleShot(true);
+    m_nextImageTimer->start();
+}
+
+void PictureFrame::displayVideo(QString file)
+{
+}
+
 void PictureFrame::displayNextImage()
 {
-	QString image;
+    QMimeDatabase mimeDatabase;
+    QMimeType mimeType;
+    QString file;
 
     if (m_nextImageTimer->isActive())
         m_nextImageTimer->stop();
     
-    while (true) {
-        if (m_files->nextFileInList(image)) {
-            QPixmap pm(image);
-            if (pm.isNull())
-                continue;
-
-            if (pm.width() > pm.height())
-                m_image->setPixmap(pm.scaledToWidth(width()));
-            else
-                m_image->setPixmap(pm.scaledToHeight(height()));
-        }
+    if (m_files->nextFileInList(file)) {
+        mimeType = mimeDatabase.mimeTypeForFile(file);
+        if (mimeType.inherits("video/mp4"))
+            displayVideo(file);
+        else if (mimeType.inherits("image/jpeg"))
+            displayImage(file);
         else {
-            m_image->setText("Image not available");
+            qWarning() << __FUNCTION__ << ":" << file << ": unknown mime type" << mimeType;
         }
-
-        m_image->show();
-        m_nextImageTimer->setInterval(m_ImageTimeout);
-        m_nextImageTimer->setSingleShot(true);
-        m_nextImageTimer->start();
-        break;
     }
 }

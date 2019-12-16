@@ -23,13 +23,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "images.h"
+#include "downloadmanager.h"
 
-Images::~Images()
+DownloadManager::~DownloadManager()
 {
 }
 
-Images::Images(QObject* parent) : QObject(parent)
+DownloadManager::DownloadManager(QObject* parent) : QObject(parent)
 {
     m_contentList = new FileDownload(this);
     m_fileDownloads = new FileDownload(this);
@@ -42,33 +42,33 @@ Images::Images(QObject* parent) : QObject(parent)
     connect(m_fileDownloads, SIGNAL(downloading(QString)), this, SLOT(newDownloadStarted(QString)));
 }
 
-void Images::downloadsFinished()
+void DownloadManager::downloadsFinished()
 {
     emit allDownloadsComplete();
 }
 
-void Images::fileDownloadComplete(QString file, QByteArray data)
+void DownloadManager::fileDownloadComplete(QString file, QByteArray data)
 {
     emit downloadComplete(file, data);
 }
 
-void Images::checkForNewContent(QUrl url)
+void DownloadManager::checkForNewContent(QUrl url)
 {
     m_contentList->addToDownloadList(url);
 }
 
-void Images::fileDownloadError(QString file)
+void DownloadManager::fileDownloadError(QString file)
 {
     qDebug() << __FUNCTION__ << ": Error downloading " << file;
     emit downloadError(file);
 }
 
-void Images::progress(QString file, qint64 percent, qint64 total)
+void DownloadManager::progress(QString file, qint64 percent, qint64 total)
 {
     emit downloadProgress(file, percent, total);
 }
 
-void Images::contentListComplete(QString, QByteArray data)
+void DownloadManager::contentListComplete(QString, QByteArray data)
 {
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "Home", "PictureViewer");
 	QString path = settings.value("ImagePath1").toString();
@@ -103,22 +103,22 @@ void Images::contentListComplete(QString, QByteArray data)
 	}
 }
 
-void Images::addToDownloadList(QSet<QString> index, QMap<QString, QUrl> potentials)
+void DownloadManager::addToDownloadList(QSet<QString> index, QMap<QString, QUrl> potentials)
 {
     m_fileDownloads->addToDownloadList(index, potentials);
 }
 
-void Images::addToDownloadList(QUrl url)
+void DownloadManager::addToDownloadList(QUrl url)
 {
     m_contentList->addToDownloadList(url);
 }
 
-void Images::contentListDownloadError()
+void DownloadManager::contentListDownloadError()
 {
     emit contentListError();
 }
 
-void Images::newDownloadStarted(QString file)
+void DownloadManager::newDownloadStarted(QString file)
 {
     emit downloadStarted(file);
 }
