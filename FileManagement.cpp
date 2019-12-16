@@ -69,15 +69,12 @@ int FileManagement::updateLocalFileList()
     qDebug() << __FUNCTION__ << ":" << m_path;
     QDir imagePath(m_path);
     
-    nameFilters << "*.jpg" << "*.JPG" << "*.jpeg" << "*.JPEG" << "*.png" << "*.PNG";
-
     cleanup();
     
     if (m_localFiles.size())
         m_localFiles.clear();
 
     if (imagePath.exists()) {
-        imagePath.setNameFilters(nameFilters);
         
         if (m_orderBy.compare("Name"), Qt::CaseInsensitive) 
             currList = imagePath.entryList(nameFilters, QDir::Files|QDir::NoDotAndDotDot, QDir::Name);

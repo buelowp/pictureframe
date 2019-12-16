@@ -47,6 +47,9 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
     connect(m_manager, SIGNAL(allDownloadsComplete()), this, SLOT(downloadsComplete()));
     connect(m_manager, SIGNAL(downloadProgress(QString, qint64, qint64)), SLOT(downloadProgress(QString, qint64, qint64)));
     connect(m_manager, SIGNAL(downloadStarted(QString)), this, SLOT(downloadStarted(QString)));
+
+    downloadContentList();
+    m_getNewContentListTimer->start(PF_ONE_HOUR);
 }
 
 PictureFrame::~PictureFrame()
@@ -111,11 +114,7 @@ void PictureFrame::showEvent(QShowEvent*)
 {
 	qDebug() << __FUNCTION__ << ": width:" << width() << ", height:" << height();
     
-    downloadContentList();
-    m_getNewContentListTimer->start(PF_ONE_HOUR);
-    
     m_image->resize(width(), height());
-	displayNextImage();
 }
 
 void PictureFrame::displayImage(QString file)
