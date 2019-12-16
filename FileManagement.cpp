@@ -69,7 +69,7 @@ int FileManagement::updateLocalFileList()
     qDebug() << __FUNCTION__ << ":" << m_path;
     QDir imagePath(m_path);
     
-//    cleanup();
+    cleanup();
     
     if (m_localFiles.size())
         m_localFiles.clear();
