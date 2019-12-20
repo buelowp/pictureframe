@@ -35,7 +35,10 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
     m_player->setVideoOutput(m_video);
     
 	m_image->setAlignment(Qt::AlignCenter);
-
+    m_image->setBackgroundRole(QPalette::Base);
+    m_image->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    m_image->setScaledContents(true);
+    
     m_turnOff = false;
 
 	m_nextImageTimer = new QTimer(this);
@@ -141,22 +144,27 @@ void PictureFrame::downloadFileFailed(QString file)
 void PictureFrame::showEvent(QShowEvent*)
 {
 	qDebug() << __FUNCTION__ << ": width:" << width() << ", height:" << height();
-    
-    m_image->resize(width(), height());
-    m_video->resize(width(), height());
+//    setWindowState(Qt::WindowMaximized);    
+//    m_image->resize(width(), height());
+//    m_video->resize(width(), height());
 }
 
 void PictureFrame::displayImage(QString file)
 {
-    m_image->show();
-    QPixmap pm(file);
-    if (!pm.isNull()) {
-        if (pm.width() > pm.height())
-            m_image->setPixmap(pm.scaledToWidth(width()));
-        else
-            m_image->setPixmap(pm.scaledToHeight(height()));
-        m_image->show();
+    QImageReader reader(file);
+    reader.setAutoTransform(true);
+    const QImage newImage = reader.read();
+
+    if (newImage.isNull()) {
+        qWarning() << __FUNCTION__ << ":" << file << ": error opening image file" << file;
+        m_nextImageTimer->setInterval(10);
+        m_nextImageTimer->setSingleShot(true);
+        m_nextImageTimer->start();
     }
+    
+    m_image->setPixmap(QPixmap::fromImage(newImage));
+    m_image->resize(width(), height());
+    m_image->setScaledContents(1);
 
     m_nextImageTimer->setInterval(m_ImageTimeout);
     m_nextImageTimer->setSingleShot(true);
