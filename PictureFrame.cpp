@@ -36,8 +36,10 @@ PictureFrame::PictureFrame(QWidget *parent) : QMainWindow(parent) {
     
 	m_image->setAlignment(Qt::AlignCenter);
     m_image->setBackgroundRole(QPalette::Base);
-    m_image->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
+    m_image->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     m_image->setScaledContents(true);
+    m_image->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    m_image->setContentsMargins(0,0,0,0);
     
     m_turnOff = false;
 
@@ -144,9 +146,6 @@ void PictureFrame::downloadFileFailed(QString file)
 void PictureFrame::showEvent(QShowEvent*)
 {
 	qDebug() << __FUNCTION__ << ": width:" << width() << ", height:" << height();
-//    setWindowState(Qt::WindowMaximized);    
-//    m_image->resize(width(), height());
-//    m_video->resize(width(), height());
 }
 
 void PictureFrame::displayImage(QString file)
